@@ -1,10 +1,10 @@
 Hibernate Jpetstore 2.0 (hjpetstore2)
 -------------------------------------
-https://hjpetstore.dev.java.net/
+https://github.com/pizirun/hjpetstore2.0
 
 1. INTRODUCTION
 Re-architect my hjpetstore1.0 Spring Framework Sample project
-(https://hjpetstore.dev.java.net/source/browse/hjpetstore/hibernateJpetstore1/)
+(https://github.com/pizirun/hjpetstore1)
 by using the latest open-source frameworks and tools:
     * JQuery fisheye
     * kaptcha
@@ -52,5 +52,5 @@ as well as reasonable performance and security.
 Let me know if you have questions
 
 Pprun
-quest.run@gmail.com
-http://hi.baidu.com/quest2run
+nextry@qq.com
+https://github.com/pizirun
