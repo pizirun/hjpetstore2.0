@@ -1,0 +1,161 @@
+<html>
+    <head>
+        <title>Hibernate Spring jpetstore</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    </head>
+
+    <body bgcolor="#FFFFFF" text="#000000">
+        <h2>Description</h2>
+        <p>
+            Design Document:
+            <A HREF="young-architect/young-architect.odt">Open Office</A>
+            <A HREF="young-architect/young-architect.pdf">PDF</A>
+            <A HREF="young-architect/young-architect.doc">MS Word</A>
+            <A HREF="young-architect/young-architect.htm">HTML (might not correct display due to charset issue)</A>
+        </p>
+        <p>
+            The following technologies are being used in the current implementation: <br />
+
+        <ul>
+            <li><a href="http://maven.apache.org/">Maven based build architecture</a></li>
+            <li><a href="http://jquery.com/">JQuery fisheye</a></li>
+            <li><a href="http://code.google.com/p/kaptcha/">kaptcha</a></li>
+            <li><a href="http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/htmlsingle/spring-framework-reference.html#mvc">Spring MVC 3</a></li>
+            <li><a href="http://static.springsource.org/spring-security/site/index.html">Spring Security</a></li>
+            <li><a href="http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11051">Hibernate 3.5</a></li>
+            <li><a href="http://community.jboss.org/wiki/ReferenceManualJBossCache3asaHibernate35SecondLevelCache">JBoss Cache 3</a>
+                <a href="http://community.jboss.org/wiki/usinginfinispanasjpahibernatesecondlevelcacheprovider">(alternative infinispan)</a></li>
+            <li><a href="https://mq.dev.java.net/">JMS External Integration</a></li>
+            <li><a href="https://glassfish.dev.java.net/">GlassFish 3 cluster</a></li>
+            <li><a href="http://dev.mysql.com/doc/refman/5.1/en/mysql-cluster.html">Mysql fail-over and cluster</a></li>
+            <li><a href="http://www.zabbix.org/">Zabbix</a> / <a href="http://www.kjkoster.org/zapcat/Zapcat_JMX_Zabbix_Bridge.html">Zapcat</a></li>
+
+        </ul>
+        <p>
+            <a href="http://hi.baidu.com/quest2run/blog/item/2526f64672654a2bcefca3a4.html">Check out the source code</a>
+        </p>
+        <p>
+            <a href="http://hi.baidu.com/quest2run/blog/item/7d3cdd8106f300b26d8119fb.html">build and deploy</a>
+        </p>
+
+        <p>
+            <i>The deprecated <a href="index-v1.html">hjpetstore v1</a> (elementary combined with Hibernate, Spring, Strut1) is
+            still available and if you are Chinese, a thoroughly introduction can be found in the chapter 17 of book
+            <a href="http://www.china-pub.com/37805">零基础学Java Web开发 (刘聪)</a>.
+            </i>
+        </p>
+        <br />
+        <p>The following are the screenshots for hjpetstore 2.0</p>
+        <img style="margin: 0px auto 10px; display: block; text-align: center; "
+             alt="welcome page" src="welcome.png">            
+
+        <h2>Requriements</h2>
+        <b>DataBase</b>
+        <ul>
+            <li>Mysql 5.x</li>
+        </ul>
+        <b>Java EE (J2EE) server / Servlet Container</b>
+        <ul>
+            <li>GlassFish v3</li>
+
+        </ul>
+        Depends on JTA datasource that would be the JNDI resource set up in GlassFish, this is the requirement of Jboss Transaction cache.<br>
+        <br>
+        <h2>Documentation </h2>
+        All configuration documentation will be composed and put on <a href="http://hi.baidu.com/quest2run">my blog</a>, which will cover: <br />
+
+
+        <b>Architecture design</b>
+        <ol>
+            <li>load balance in Web layer</li>
+            <li>cluster and failover in Database and Application Server</li>
+            <li>ERD</li>
+            <li>security</li>
+            <li>transaction model and strategy, including discussion of business transaction (long term transaction)</li>
+        </ol>
+
+        <b>Implementation detail</b>
+        <ol>
+            <li>Hibernate mapping trick and performance consideration</li>
+            <li>JMS loose-coupling Integration</li>
+            <li>Spring MVC 3 Restful</li>
+            <li>Spring security 3</li>
+            <li>Jboss second level cache</li>
+            <li>Spring RestTemplate (the Restful client)</li>
+        </ol>
+
+        <h2>Run Instructions</h2>
+        <b>Setup before run</b>
+        <ol>
+            <li>Download NetBeans with GlassFish and install, if you still have not</li>
+            <li>Download Mysql and install, if you still have not</li>
+            <li>Mysql intializaton, 
+                see ${hjpetstore2.0}/src/main/resources/conf/db/mysql/mysql_readme.txt
+                see <a href="https://hjpetstore.dev.java.net/source/browse/hjpetstore/hjpetstore2/src/main/resources/conf/db/mysql/mysql_readme.txt?rev=1.1&view=log">mysql_readme.txt</a></li>
+
+            <li>install maven, if you still have not
+                Several artifacts missed in community maven repository, we need to import them into your local repository,
+                see <a href="https://hjpetstore.dev.java.net/source/browse/hjpetstore/hjpetstore2/src/main/resources/conf/maven-readme.txt?rev=1.1&view=log">maven-readme.txt</a></li>
+        </ol>
+
+        <b>Glassfish configurations</b>
+        <ol>
+            <li>JGroup ip v6 issue: （only linux) change glassfish to disable ipv6, otherwise jgroup will be failed.
+                start up glassfish admin console if still not <br />
+                JVM setting -> JVM options -> add JVM option： -Djava.net.preferIPv4Stack=true
+            </li>
+            <li>Mysql connectorJ </li>
+            Download Connector/J, the MySQL JDBC driver (e.g., Connector/J 5.1.x), which can be found here: http://dev.mysql.com/downloads/connector/j/
+            added mysql-connector-java-xxx.jar into glassfish-3.0.1/glassfish/lib for datasource setup
+            <li> Create XA datasource 'jdbc/hjpetstore',
+                see <a href="http://hi.baidu.com/quest2run/blog/item/4cc48eff5e6e368fb801a009.html">Create JNDI resource for hjpetstore 2.0</a></li>
+            <li>Create JMS resource,
+                see <a href="http://hi.baidu.com/quest2run/blog/item/4cc48eff5e6e368fb801a009.html">Create JNDI resource for hjpetstore 2.0</a></li>
+            <li>Launch the project <br />
+                (assume you downloaded the hjpetstore 2.0) <br />
+                In Netbeans, right click the project -> run</li>
+
+        </ol>
+
+        <h2>Screenshoots</h2>
+        <b>Fish eye </b>
+        <br />
+        <br />
+
+        <img src="fish.png"
+             alt="fish" border="0" />
+        <br>
+        <br>
+
+        <img style="margin: 0px auto 10px; display: block; text-align: center; "
+             alt="dog" src="dog.png"><br>
+        <br>
+
+        <br>
+        <img style="margin: 0px auto 10px; display: block; text-align: center; "
+             alt="cat and bird"
+             src="cat-bird.png"><br>
+        <br>
+
+        <b>Kaptcha</b>
+
+        <img style="margin: 0px auto 10px; display: block; text-align: center; "
+             alt="kaptcha login"
+             src="kaptcha.png"><br>
+        <br>
+
+
+        <b>Spring MVC 3 RestTemplate Client</b>
+        <p>which requests a RESTful controller SearchProducts of Hjpetstore2 and
+            uses Xpath parse the xml response and then send another Rest request
+            to pull all image which url contained in the previous response,
+            then use org.springframework.http.converter.BufferedImageHttpMessageConverter
+            to return a list of BufferedImage for rending in Swing Component:
+        </p><br />
+        <img style="margin: 0px auto 10px; display: block; text-align: center; "
+             alt="RestTemplate Client"
+             src="rest-client.png"><br>
+        <br>
+        <br>
+    </body>
+</html>

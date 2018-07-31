@@ -1,0 +1,14 @@
+<%@ page contentType="text/html;charset=UTF-8" %>
+<%@page pageEncoding="UTF-8"%>
+
+<table>
+    <tr>
+        <td>
+            <img src="../kaptcha.jpg" id="kaptchaImage" width="200" />
+        </td>
+        <td>
+            <input type="text" name="kaptcha" value="" />
+            <br /><small>Can't read the image? Click it to get a new one.</small>
+        </td>
+    </tr>
+</table>

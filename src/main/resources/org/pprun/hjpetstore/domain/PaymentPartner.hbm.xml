@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.pprun.hjpetstore.domain">
+  <class name="PaymentPartner" table="PaymentPartner">
+    <comment>the partner of payment system</comment>
+    <id access="field" column="paymentPartnerId" name="id" type="long">
+      <generator class="native"/>
+    </id>
+    <!-- A versioned entity. -->
+    <version access="field" name="version" type="long"/>
+    <property length="80" name="name" not-null="true" type="string" unique="true"/>
+    <property length="20" name="status" not-null="true" type="payment_partner_status"/>
+    <!-- can't be unique: BLOB/TEXT Column Used in Key Specification Without a Key Length
+         as length 512 is too long for index -->
+    <property length="512" name="publicKey" not-null="true" type="text"/>
+    <property length="80" name="phone" not-null="true" type="string"/>
+    <!-- We can't change the creation time, so map it with update="false" -->
+    <property access="field" name="createTime" not-null="true" update="false"/>
+    <property access="field" name="updateTime"/>
+  </class>
+</hibernate-mapping>

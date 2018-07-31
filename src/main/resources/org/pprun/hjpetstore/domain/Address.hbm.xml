@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.pprun.hjpetstore.domain">
+  <!-- By default, mysql table is case sensitive -->
+  <class name="Address" table="Address">
+    <comment>The user address for billing and shipping.</comment>
+    <id access="field" column="addressId" name="id" type="long">
+      <generator class="native"/>
+    </id>
+    <version access="field" name="version" type="long"/>
+    <property length="80" name="addr1" not-null="true" type="string"/>
+    <property length="40" name="addr2" not-null="true" type="string"/>
+    <property length="80" name="city" not-null="true" type="string"/>
+    <property length="80" name="state" not-null="true" type="string"/>
+    <property length="20" name="zipcode" not-null="true" type="string"/>
+    <property length="20" name="country" not-null="true" type="string"/>
+    <!-- We can't change the creation time, so map it with update="false" -->
+    <property access="field" name="createTime" not-null="true" update="false"/>
+    <property access="field" name="updateTime"/>
+    <!--
+            owner side of Mapping the bidirectional one-to-many association for user : address
+        -->
+    <property length="20" name="status" not-null="true" type="address_status"/>
+    <many-to-one column="userId" foreign-key="fk_address_userId" name="user" not-null="true" update="false"/>
+  </class>
+</hibernate-mapping>

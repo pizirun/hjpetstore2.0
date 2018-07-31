@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.pprun.hjpetstore.domain">
+  <!-- Order is keyword in database, table name can not be 'Order' -->
+  <class name="Order" table="Orders">
+    <comment>The order or purchase that the use make in the shop</comment>
+    <id access="field" column="orderId" name="id" type="long">
+      <generator class="native"/>
+    </id>
+    <!-- A versioned entity. -->
+    <version access="field" name="version" type="long"/>
+    <!--
+            owner side of  of this bidirectional
+            one-to-many association (user to order).
+        -->
+    <many-to-one column="userId" foreign-key="fk_order_userId" name="user" not-null="true"/>
+    <!--
+    Mapping for the shipAddr of class Address.
+    It does not usually make sense to enable cascade on a <many-to-one>  or <many-to-many>  association.
+    Cascade is often useful for <one-to-one> and <one-to-many>  associations.
+    cascade for shippAddress is 'none' because we can dynamically create one when checkout,
+    so we need to take it manually, instead of transitive. and that's why it is update=false
+    -->
+    <many-to-one cascade="none" column="shipAddressId" foreign-key="fk_order_shipAddressId" name="shipAddress" not-null="true" update="false"/>
+    <!-- Mapping for the billAddr of class Address. -->
+    <many-to-one cascade="save-update" column="billAddressId" foreign-key="fk_order_billAddressId" name="billAddress" not-null="true"/>
+    <property length="80" name="courier" not-null="true" type="string"/>
+    <property name="totalPrice" precision="10" scale="2" type="big_decimal"/>
+    <property length="80" name="billToFirstname" not-null="true" type="string"/>
+    <property length="80" name="billToLastname" not-null="true" type="string"/>
+    <property length="80" name="shipToFirstname" not-null="true" type="string"/>
+    <property length="80" name="shipToLastname" not-null="true" type="string"/>
+    <property length="200" name="cardNumber" not-null="true" type="string"/>
+    <property length="7" name="expireDate" not-null="true"/>
+    <property length="80" name="cardType" not-null="true" type="string"/>
+    <!-- 
+            Simple property mapped with a custom enum usertype.
+            order_status defined in UserTypes.hbm.xml file
+        -->
+    <property column="orderStatus" length="20" name="orderStatus" not-null="true" type="order_status"/>
+    <!-- java.util.Locale type -->
+    <property length="5" name="locale" not-null="true" type="locale"/>
+    <!-- We can't change the creation time, so map it with update="false" -->
+    <property access="field" name="createTime" not-null="true" update="false"/>
+    <property access="field" name="updateTime"/>
+    <!--
+          inverse="true" means OrderLineItem is the owner side (Order is the mirror side - inverse),
+          OrderLineItem will take charge of relationship 'orderId', which is the foreign-key in OrderLineItem.
+          If only call order.getOrderLineItems().add(newOrderLineItem), no changes are made persistent.
+          But only call orderLineItem.setOrder(order) will make the relationship set - means the foreign-key will be persisted.
+
+          generally the cascade should be 'all-delete-orphan',
+          but we mapped the order.id as one of the fields of composite-key of OrderLineItem,
+          we have to manually maintain the association when save/update.
+
+          This is one of another reasons that we SHOULD NOT mapping composite key.
+        -->
+    <set batch-size="10" cascade="delete-orphan" inverse="true" name="orderLineItems">
+      <key>
+        <column name="orderId" not-null="true"/>
+      </key>
+      <one-to-many class="OrderLineItem"/>
+    </set>
+    <!--
+            A uni-directional many-to-one association on a foreign key paymentPartnerId
+            update="true" (default) as we want Order to set PaymentPartnerId when insert order
+        -->
+    <many-to-one class="PaymentPartner" column="paymentPartnerId" foreign-key="fk_order_paymentPartnerId" name="paymentPartner" not-null="true"/>
+  </class>
+</hibernate-mapping>

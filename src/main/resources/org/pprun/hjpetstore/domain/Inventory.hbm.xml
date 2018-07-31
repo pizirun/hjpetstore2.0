@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.pprun.hjpetstore.domain">
+  <class name="Inventory" table="Inventory">
+    <comment>Item inventory</comment>
+    <id access="field" column="InventoryId" name="id" type="long">
+      <generator class="native"/>
+    </id>
+    <!-- A versioned entity. -->
+    <version access="field" name="version" type="long"/>
+    <property name="quantity" not-null="true" type="integer"/>
+    <!-- A bidirectional one-to-one association on a foreign key inventoryId -->
+    <one-to-one class="Item" name="item" property-ref="inventory"/>
+    <!-- We can't change the creation time, so map it with update="false" -->
+    <property access="field" name="createTime" not-null="true" update="false"/>
+    <property access="field" name="updateTime"/>
+  </class>
+</hibernate-mapping>

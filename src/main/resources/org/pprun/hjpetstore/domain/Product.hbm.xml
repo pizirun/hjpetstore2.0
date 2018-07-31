@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.pprun.hjpetstore.domain">
+  <class name="Product" table="Product">
+    <comment>The product in the stock.</comment>
+    <id access="field" column="productId" name="id" type="long">
+      <generator class="native"/>
+    </id>
+    <!-- A versioned entity. -->
+    <version access="field" name="version" type="long"/>
+    <property length="10" name="productNumber" not-null="true" type="string" unique="true"/>
+    <property length="80" name="productName" type="string"/>
+    <property length="255" name="productDesc" type="string"/>
+    <property length="255" name="image" type="string"/>
+    <!--
+            Mapping for the bidirectional many-to-one association for product : category
+        -->
+    <many-to-one class="Category" column="categoryId" foreign-key="fk_product_categoryId" name="category" not-null="true" update="false"/>
+    <!-- We can't change the creation time, so map it with update="false" -->
+    <property access="field" name="createTime" not-null="true" update="false"/>
+    <property access="field" name="updateTime"/>
+    <!--
+            Mapping for Item association.
+            inverse="true" means Item is the owner side (Product is the mirror side - inverse),
+            Item will take charge of relationship 'productId', which is the foreign-key in Item.
+            If only call product.getItems().add(newItem), no changes are made persistent.
+            But only call item.setProduct(product) will make the relationship set - means the foreign-key will be persisted.
+        -->
+    <set cascade="all-delete-orphan" inverse="true" name="items">
+      <!-- column: the name of the foreign key column in Item -->
+      <key column="productId"/>
+      <one-to-many class="Item"/>
+    </set>
+  </class>
+</hibernate-mapping>

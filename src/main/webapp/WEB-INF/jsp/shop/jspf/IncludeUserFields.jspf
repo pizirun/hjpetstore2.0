@@ -1,0 +1,204 @@
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<FONT color=darkgreen><H3>User detail Information</H3></FONT>
+
+<TABLE bgcolor="#000000" border=0 cellpadding=3 cellspacing=1>
+    <TR bgcolor="#99FF22">
+        <TD>
+            First name:</TD>
+        <TD>
+    <spring:bind path="userForm.user.firstname">
+        <input type="text" name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>"/>
+    </spring:bind>
+</TD>
+</TR>
+
+<TR bgcolor="#99FF22"><TD>
+        Last name:</TD><TD>
+<spring:bind path="userForm.user.lastname">
+    <input type="text" name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>"/>
+</spring:bind>
+</TD>
+</TR>
+
+<TR bgcolor="#99FF22"><TD>
+        Email:</TD><TD>
+<spring:bind path="userForm.user.email">
+    <input type="text" size="40" name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>"/>
+</spring:bind>
+</TD>
+</TR>
+
+<TR bgcolor="#99FF22"><TD>
+        Phone:</TD><TD>
+<spring:bind path="userForm.user.phone">
+    <input type="text" name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>"/>
+</spring:bind>
+</TD></TR>
+
+<tr bgcolor="black">
+    <td bgcolor="#99FF22">
+        select Your address:
+    </td>
+
+    <td>
+        <table>
+            <c:forEach var="address" items="${userForm.user.addresses}" varStatus="loopStatus">
+                <tr bgcolor="#99FF22">
+                    <c:if test="${!userForm.newUser}">
+                        <!-- id as hidden field to let Spring MVC know which one is address to update/save -->
+                        <td>
+                    <spring:bind path="userForm.user.addresses[${loopStatus.index}].id">
+                        <input type="hidden" name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>"/>
+                    </spring:bind>
+            </td>
+
+            <td>
+        <spring:bind path="userForm.user.addresses[${loopStatus.index}].status">
+            <input type="radio"  name='status' value='<c:out value="${address.id}"/>'
+                   <c:if test='${status.value == "ACTIVE"}'>checked</c:if> />
+        </spring:bind>
+    </td>
+</c:if>
+
+<td>
+    <table align="center" bgcolor="#99FF22" border=0 cellpadding=3 cellspacing=1>
+
+        <TR bgcolor="#99FF22">
+            <TD>Address line 1:</TD>
+            <TD>
+        <spring:bind path="userForm.user.addresses[${loopStatus.index}].addr1">
+            <input type="text" size="40" name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>"/>
+        </spring:bind>
+</TD>
+</TR>
+<TR bgcolor="#99FF22">
+    <TD>Address line 2:</TD>
+    <TD>
+<spring:bind path="userForm.user.addresses[${loopStatus.index}].addr2">
+    <input type="text" size="40" name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>"/>
+</spring:bind>
+</TD>
+</TR>
+<TR bgcolor="#99FF22">
+    <TD>
+        City:
+    </TD>
+    <TD>
+<spring:bind path="userForm.user.addresses[${loopStatus.index}].city">
+    <input type="text" name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>"/>
+</spring:bind>
+</TD>
+</TR>
+<TR bgcolor="#99FF22">
+    <TD>
+        State:
+    </TD>
+    <TD>
+<spring:bind path="userForm.user.addresses[${loopStatus.index}].state">
+    <input type="text" size="4" name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>"/>
+</spring:bind>
+</TD>
+</TR>
+<TR bgcolor="#99FF22">
+    <TD>
+        Zip:
+    </TD>
+    <TD>
+<spring:bind path="userForm.user.addresses[${loopStatus.index}].zipcode">
+    <input type="text" size="10" name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>"/>
+</spring:bind>
+</TD>
+</TR>
+<TR bgcolor="#99FF22">
+    <TD>
+        Country:
+    </TD>
+    <TD>
+<spring:bind path="userForm.user.addresses[${loopStatus.index}].country">
+    <input type="text" size="15" name="<c:out value="${status.expression}"/>" value="<c:out value="${status.value}"/>"/>
+</spring:bind>
+</TD>
+</TR>
+</table>
+</td>
+</c:forEach>
+</tr>
+</table>
+</td>
+</tr>
+</TABLE>
+
+
+<FONT color=darkgreen><H3>Profile Information</H3></FONT>
+
+<TABLE bgcolor="#000000" border=0 cellpadding=3 cellspacing=1 >
+    <TR bgcolor="#99FF22"><TD>
+            Language Preference:</TD><TD>
+    <spring:bind path="userForm.user.langPreference">
+        <select name="<c:out value="${status.expression}"/>">
+            <c:forEach var="language" items="${languages}">
+                <option <c:if test="${language == status.value}">selected</c:if> value="<c:out value="${language}"/>">
+                    <c:out value="${language}"/></option>
+                </c:forEach>
+        </select>
+    </spring:bind>
+</TD></TR>
+<TR bgcolor="#99FF22"><TD>
+        Favourite Category:</TD><TD>
+<spring:bind path="userForm.user.favCategory.categoryName">
+    <select name="<c:out value="${status.expression}"/>">
+        <c:forEach var="category" items="${categories}">
+            <option <c:if test="${category.categoryName == status.value}">selected</c:if> value="<c:out value="${category.categoryName}"/>">
+                <c:out value="${category.categoryName}"/></option>
+            </c:forEach>
+    </select>
+</spring:bind>
+</TD></TR>
+<TR bgcolor="#99FF22"><TD colspan=2>
+<spring:bind path="userForm.user.displayMylist">
+    <input type="checkbox" name="<c:out value="${status.expression}"/>" value="true" <c:if test="${status.value}">checked</c:if>>
+		Enable My Favorite Product List
+</spring:bind>
+</TD></TR>
+<TR bgcolor="#99FF22"><TD colspan=2>
+<spring:bind path="userForm.user.displayBanner">
+    <input type="checkbox" name="<c:out value="${status.expression}"/>" value="true" <c:if test="${status.value}">checked</c:if>>
+		Enable My Banner
+</spring:bind>
+</TD></TR>
+
+<c:if test="${userForm.newUser}">
+    <TR bgcolor="#99FF22"><TD colspan=2>
+    <spring:bind path="userForm.generateKey">
+        <input type="checkbox" name="<c:out value="${status.expression}"/>" value="true" <c:if test="${status.value}">checked</c:if>>
+		Generate keys for public web service access supplied by HJpetstore
+    </spring:bind>
+</TD></TR>
+</c:if>
+
+<c:if test="${!userForm.newUser}">
+    <TR bgcolor="#99FF22">
+        <TD>API Key: </TD>
+        <TD>
+            <spring:bind path="userForm.user.apiKey">
+                <c:out value="${status.value}"/>
+            </spring:bind>
+        </TD>
+    </TR>
+    <TR bgcolor="#99FF22">
+        <TD>Secret Key: </TD>
+        <TD>
+            <spring:bind path="userForm.user.secretKey">
+                <c:out value="${status.value}"/>
+            </spring:bind>
+        </TD>
+    </TR>
+    <TR bgcolor="#FFFF00">
+        <TD colspan=2 >
+            <i>Your Secret Access Key is a secret and should be known only by you and HJpetstore.<br />
+        It is important to keep it confidential to protect your account. <br />
+        Never include it in your requests to HJpetstore REST and never e-mail it to anyone.</i>
+        </TD>
+    </TR>
+</c:if>
+</TABLE>

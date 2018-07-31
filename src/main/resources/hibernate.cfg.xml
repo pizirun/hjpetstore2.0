@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+  <session-factory>
+    <property name="hibernate.dialect">${hibernate.dialect}</property>
+    <property name="hibernate.show_sql">true</property>
+    <property name="hibernate.format_sql">true</property>
+    <property name="hibernate.use_sql_comments">true</property>
+    <property name="hibernate.generate_statistics">true</property>
+    <!--
+            Sets a maximum "depth" for the outer join fetch tree for single-ended associations (one-to-one, many-to-one)
+            A 0 disables default outer join fetching.  recommended values between 0 and 3
+        -->
+    <property name="hibernate.max_fetch_depth">1</property>
+    <!--
+        hibernate.hbm2ddl.auto 配置的值
+           1. create 在每次
+              SesstionFactory 构建时(一般是应用重启时，或者伴随着应用服务器重启时)，先将之前数据库中的所有数据全部清空，后紧跟着根据所有的
+              hbm.xml 映射文件重新创建新的数据库表
+           2. create-drop 除了
+              create 的所有含义之外，在每次应用的退出前，将进行一次数据空清空。因此这个配置将有两次清空操作，一次是退出，一次是启动时。
+           3. update
+              如果在开发阶段更改了实体对象的映射文件(hbm.xml) 的定义后，此配置将后台的数据库表进行更新(如增加表的列)
+           4. validate
+              用于校验现有的表与现有的配置是否一致。
+
+        值得注意的是 hibernate.hbm2ddl.auto
+        的配置：
+        Usually you only leave it turned on
+        in continous unit testing, but another run of hbm2ddl would drop
+        everything you have stored - the create
+        configuration setting actually translates into "drop all tables
+        from the schema, then re-create all tables, when the SessionFactory is
+        build". Most new Hibernate
+        users fail at this point and we see questions about Table not found
+        error messages regularly.
+
+        我这里翻译一下：
+        一般情况下，只有在连续的测试阶段时需要设置这个值，因为在测试时一般都希望在测试完后，数据与测试前并无变化。
+        将hibernate.hbm2ddl.auto 配置成 "create" 是意思是在每次 SesstionFactory
+        构建时(一般是应用重启时，或者伴随着应用服务器重启时)，先将之前数据库中的所有数据全部清空，后紧跟着根据所有的 hbm.xml
+        映射文件重新创建新的数据库表。大我数 Hibernate 的新手总是没有理解这一点，他们以为 "create" 都是简单地创建，而忽略了
+        "drop" 之前的丢弃副作用。
+        从上可以看出，除了 validate
+        在产品阶段看来有点用之外(但是肯定会影响应用的启动速度的)，其它的并不适合已经部署了的产品。特别是对于已存在数据的数据库。
+        试想如果采用了 create 或 create-drop，在不经意(应用重启)间可能会将所有的数据库的数据全部清空。
+        -->
+    <property name="hibernate.hbm2ddl.auto">update</property>
+    <!-- 
+            use Ehcache in non-cluster environment: http://ehcache.org/documentation/hibernate.html
+        -->
+    <property name="hibernate.cache.region.factory_class">net.sf.ehcache.hibernate.EhCacheRegionFactory</property>
+    <property name="net.sf.ehcache.configurationResourceName">/ehcache.xml</property>
+    <property name="hibernate.cache.use_second_level_cache">true</property>
+    <!-- we won't want query cache
+        <property name="hibernate.cache.use_query_cache">false</property>
+        -->
+    <!-- hbm.xml files -->
+    <mapping resource="org/pprun/hjpetstore/domain/UserTypes.hbm.xml"/>
+    <mapping resource="org/pprun/hjpetstore/domain/Address.hbm.xml"/>
+    <mapping resource="org/pprun/hjpetstore/domain/Banner.hbm.xml"/>
+    <mapping resource="org/pprun/hjpetstore/domain/Category.hbm.xml"/>
+    <mapping resource="org/pprun/hjpetstore/domain/Inventory.hbm.xml"/>
+    <mapping resource="org/pprun/hjpetstore/domain/Item.hbm.xml"/>
+    <mapping resource="org/pprun/hjpetstore/domain/OrderLineItem.hbm.xml"/>
+    <mapping resource="org/pprun/hjpetstore/domain/Order.hbm.xml"/>
+    <mapping resource="org/pprun/hjpetstore/domain/Product.hbm.xml"/>
+    <mapping resource="org/pprun/hjpetstore/domain/Supplier.hbm.xml"/>
+    <mapping resource="org/pprun/hjpetstore/domain/User.hbm.xml"/>
+    <mapping resource="org/pprun/hjpetstore/domain/Role.hbm.xml"/>
+    <mapping resource="org/pprun/hjpetstore/domain/RSAKey.hbm.xml"/>
+    <mapping resource="org/pprun/hjpetstore/domain/PaymentPartner.hbm.xml"/>
+    <!--
+        You have to carefully evaluate the performance of a clustered cache with full transaction
+        isolation before using it in production. In many cases, you may be better off disabling
+        the second-level cache for a particular class if stale data isn’t an option! First
+        benchmark your application with the second-level cache disabled. Enable it for
+        good candidate classes, one at a time, while continuously testing the scalability of
+        your system and evaluating concurrency strategies.
+        -->
+    <!-- cache setting for entities and collections -->
+    <!--        <class-cache class="org.pprun.hjpetstore.domain.Address" usage="read-write" />-->
+    <class-cache class="org.pprun.hjpetstore.domain.RSAKey" usage="read-only"/>
+    <class-cache class="org.pprun.hjpetstore.domain.PaymentPartner" usage="read-only"/>
+    <class-cache class="org.pprun.hjpetstore.domain.Banner" usage="read-only"/>
+    <class-cache class="org.pprun.hjpetstore.domain.Category" usage="read-only"/>
+    <!--        <class-cache class="org.pprun.hjpetstore.domain.Inventory" usage="read-write" />-->
+    <class-cache class="org.pprun.hjpetstore.domain.Product" usage="read-only"/>
+    <class-cache class="org.pprun.hjpetstore.domain.Supplier" usage="read-only"/>
+    <class-cache class="org.pprun.hjpetstore.domain.Role" usage="read-write"/>
+    <collection-cache collection="org.pprun.hjpetstore.domain.Category.products" usage="read-only"/>
+    <collection-cache collection="org.pprun.hjpetstore.domain.Product.items" usage="read-only"/>
+    <collection-cache collection="org.pprun.hjpetstore.domain.Supplier.items" usage="read-only"/>
+    <collection-cache collection="org.pprun.hjpetstore.domain.User.roles" usage="read-write"/>
+    <!--        <collection-cache collection="org.pprun.hjpetstore.domain.User.addresses" usage="read-write"/>-->
+  </session-factory>
+</hibernate-configuration>

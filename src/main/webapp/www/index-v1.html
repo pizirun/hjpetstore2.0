@@ -1,0 +1,109 @@
+<html>
+<head>
+<title>Hibernate Spring jpetstore v1</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+
+<body bgcolor="#FFFFFF" text="#000000">
+<h2>Description</h2>
+<p>
+</p>
+<p>
+Rewrite Spring's Jpetstore sample project by using Hibernate as its
+persistence layer, and removed SpringMVC web layer, that's now only
+Struts' based web layer has been ported.
+The project has been tested on several database and application/web servers:
+</p>
+<p>
+    <font color="red">The version 2.0 is out <a href="https://hjpetstore.dev.java.net/">hjpetstore v2</a> with more interesting and latest technologies.</font>
+
+<h2>Configuration</h2>
+<h3>DataBase</h3>
+<ul>
+<li>Mysql 5.x</li>
+<li>Oracle 9i, 10g</li>
+</ul>
+<h3>Java EE (J2EE) server / Servlet Container</h3>
+<ul>
+<li>Sun Application Server 8.2, Sun Application Server 9.0, 9.1</li>
+<li>GlassFish v1, v2</li>
+<li>Tomcat 5.5.x, 6.x</li>
+<li>JBoss 4.0.4, 4.0.5</li>
+<li>Jetty 6.1.3</li>
+</ul>
+Among them, the JNDI DataSource has successfully run on Sun
+Application Server/GlassFish and JBoss.<br>
+<br>
+<h2>Documentation (in Chinese)</h2>
+There's a serial documentation on <a href="http://pprun.blogspot.com/">my
+blog</a>, which cover:<br>
+<a href="http://pprun.blogspot.com/2007/05/hibernate-jpetstore.html">Architecture
+Design</a><br>
+<a href="http://pprun.blogspot.com/2006/08/hibernate-jpetstore.html">Data
+Layer Design</a><br>
+<a href="http://pprun.blogspot.com/2007/05/hibernate-jpetstore_31.html">Controller
+Layer Design</a><br>
+<a href="http://pprun.blogspot.com/2007/06/hibernate-jpetstore.html">Web
+/ Representation Layer Design</a><br>
+<a href="http://pprun.blogspot.com/2007/08/hibernate-jpetstore.html">Deployment</a><br>
+<br>
+<br>
+<h2>Run Instructions</h2>
+Initializing the mysql db for this test, the instruction follows:<br>
+<br>
+1. Check out this project into NetBeans, resolving any build path error. <br />
+2. Set up MySql schema hjpetstore and create a user hjpetstore/hjpetstore for username/password<br>
+
+<pre><font style="color: rgb(0, 0, 0);" color="#6666cc">
+mysql -h localhost -u root -p &lt; $hjpetstore\conf\jpetstore_mysql.sql</font></pre>
+<pre><font style="color: rgb(0, 0, 0);" color="#6666cc">
+Enter password: ********&nbsp;&nbsp; (root's password to run)</font></pre>
+<font style="color: rgb(0, 0, 0);" color="#6666cc"><br>
+3. Data loading<br>
+3.1 Run the checked out project - In netbeans, right click hibernateJpetstore | run, this will auto-generated all mapped table according to *.hbm files.<br />
+3.2 In NetBeans, run the content of&nbsp; </font><font
+style="color: rgb(0, 0, 0);" color="#6666cc"><span
+style="font-family: monospace;">$</span></font><font
+style="color: rgb(0, 0, 0); font-family: monospace;" color="#6666cc">hjpetstore\db\mysql\</font><font
+style="color: rgb(0, 0, 0);" color="#6666cc"><span
+style="font-family: monospace;">jpetstore-mysql-dataload.sql</span></font><font
+style="color: rgb(0, 0, 0);" color="#6666cc"><br>
+This will load all initail data into tables. <br />
+I trust you have known how to do this in NetBeans.<br>
+<br>
+3.2.1 Or you can run it in Mysql Query browser tool.</font><span
+style="color: rgb(0, 0, 0);">
+</span><br style="color: rgb(0, 0, 0);">
+<br style="color: rgb(0, 0, 0);">
+<br style="color: rgb(0, 0, 0);">
+<font style="color: rgb(0, 0, 0);" color="#6666cc">The context url is <a
+href="http://localhost:8080/hjpetstore/">/hjpetstore</a> for all
+server:</font><br>
+<br>
+
+<h2>Screenshoots</h2>
+<b>See the footnote part for the server powered by... </b>
+<br /><br />
+
+1. Powered by Sun Application Server 9.0<br>
+
+<img style="margin: 0px auto 10px; display: block; text-align: center; "
+src="hjpetstore_poweredby_sun.png"
+alt="powered by Sun Application Server" border="0" />
+<br>
+<br>
+
+2. Powered by Jetty6<br>
+<img style="margin: 0px auto 10px; display: block; text-align: center; "
+alt="Powered by Jetty6" src="hjpetstore_poweredby_jetty.png"><br>
+<br>
+
+3.Powered by Tomcat5.5<br>
+<br>
+<img style="margin: 0px auto 10px; display: block; text-align: center; "
+alt="Powered by Tomcat5.5"
+src="hjpetstore_poweredby_jetty_tomcat5.png"><br>
+<br>
+<br>
+</body>
+</html>

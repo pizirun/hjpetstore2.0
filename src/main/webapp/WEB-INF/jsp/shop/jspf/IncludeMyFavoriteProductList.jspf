@@ -1,0 +1,33 @@
+
+<c:if test="${!empty userSession.favoriteProductList}">
+    <p>&nbsp;</p>
+    <table align="right" bgcolor="#000000" border="0" cellspacing="2" cellpadding="3">
+        <tr bgcolor="#99FF22"><td>
+                <font size="4"><b>Pet Favorites</b></font>
+                <font size="2"><i><br />Shop for more of your <br />favorite pets here.</i></font>
+            </td></tr>
+        <tr bgcolor="#99FF22">
+            <td>
+        <c:forEach var="product" items="${userSession.favoriteProductList.pageList}" >
+            <a href="<c:url value="/shop/viewProduct.html"><c:param name="productNumber" value="${product.productNumber}"/></c:url>">
+                <c:out value="${product.productName}"/>
+            </a>
+            <br/>
+            <font size="2">(<c:out value="${product.productNumber}"/>)</font>
+            <br/>
+        </c:forEach>
+        </td>
+        </tr>
+        <tr>
+            <td>
+        <c:if test="${!userSession.favoriteProductList.firstPage}">
+            <a href="viewCart.html?page=previous"><font color="white"><B>&lt;&lt; Prev</B></font></a>
+        </c:if>
+        <c:if test="${!userSession.favoriteProductList.lastPage}">
+            <a href="viewCart.html?page=next"><font color="white"><B>Next &gt;&gt;</B></font></a>
+        </c:if>
+        </td>
+        </tr>
+
+    </table>
+</c:if>

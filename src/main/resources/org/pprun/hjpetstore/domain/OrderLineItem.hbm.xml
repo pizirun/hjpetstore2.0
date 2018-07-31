@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.pprun.hjpetstore.domain">
+  <class name="OrderLineItem" table="OrderLineItem">
+    <comment>An orderItem in the order</comment>
+    <!--Composite identifiers:
+        We’ve already mentioned that we think natural primary keys can be a bad idea.
+        Natural keys often make it difficult to refactor the data model when business
+        requirements change. They may even, in extreme cases, impact performance.
+        Unfortunately, many legacy schemas use (natural) composite keys heavily and, for
+        the reason we discourage the use of composite keys, it may be difficult to change
+        the legacy schema to use noncomposite natural or surrogate keys.
+
+        So I have to train myself to use it, haha!
+    -->
+    <composite-id access="field" class="OrderLineItem$Id" name="id">
+      <key-property access="field" name="lineNumber"/>
+      <key-property access="field" name="orderId"/>
+    </composite-id>
+    <!-- A versioned entity. -->
+    <version access="field" name="version" type="long"/>
+    <property name="quantity" not-null="true" type="integer"/>
+    <property name="unitPrice" precision="10" scale="2" type="big_decimal"/>
+    <!-- We can't change the creation time, so map it with update="false" -->
+    <property access="field" name="createTime" not-null="true" update="false"/>
+    <property access="field" name="updateTime"/>
+    <!--
+            owner side of the indexed one-to-many collection in OrderLineItem.
+            update="false" insert="false", This is necessary because the
+            columns are mapped twice, once in the composite key (which is responsible for
+            insertion of the values) and again for the many-to-one associations.
+        -->
+    <many-to-one access="field" column="orderId" foreign-key="fk_oli_orderId" insert="false" name="order" not-null="true" update="false"/>
+    <!-- An Unidirectional associations many-to-one association(OrderLineItem -> Item) -->
+    <many-to-one access="field" column="itemId" foreign-key="fk_oli_itemId" name="item" not-null="true" update="false"/>
+  </class>
+</hibernate-mapping>

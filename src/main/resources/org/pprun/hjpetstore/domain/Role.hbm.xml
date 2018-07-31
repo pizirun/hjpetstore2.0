@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.pprun.hjpetstore.domain">
+  <class name="Role" table="Role">
+    <comment>The user role or group of this application.</comment>
+    <id access="field" column="roleId" name="id" type="long">
+      <generator class="native"/>
+    </id>
+    <version access="field" name="version" type="long"/>
+    <property length="20" name="roleName" not-null="true" type="string" unique="true"/>
+    <!--
+        Password is a keyword in some databases, so we quote it.
+        The length is hash value, 128 for future evolution.
+    -->
+    <property length="200" name="roleDescription" not-null="true" type="string"/>
+    <!-- We can't change the creation time, so map it with update="false" -->
+    <property access="field" name="createTime" not-null="true" update="false"/>
+    <property access="field" name="updateTime"/>
+    <!--
+            Mapping for the bidirectional many-to-many association for User : Role
+            on a join table RoleMember
+            You have enabled cascade="save-update" for both ends of the collection.
+            This isn’t unreasonable, we suppose. On the other hand, the cascading options
+            all, delete, and delete-orphans aren’t meaningful for many-to-many associa-
+            tions.
+            make sure the name of foreign-key is unique
+        -->
+    <set cascade="save-update" name="users" table="RoleMember">
+      <key column="roleId" not-null="true"/>
+      <many-to-many class="User" column="userId" foreign-key="fk_role_userId"/>
+    </set>
+  </class>
+</hibernate-mapping>

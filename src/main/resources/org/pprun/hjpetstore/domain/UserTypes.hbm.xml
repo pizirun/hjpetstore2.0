@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+  <typedef class="org.pprun.hjpetstore.persistence.StringEnumUserType" name="order_status">
+    <param name="enumClassname">org.pprun.hjpetstore.domain.Order$OrderStatus</param>
+  </typedef>
+  <typedef class="org.pprun.hjpetstore.persistence.StringEnumUserType" name="supplier_status">
+    <param name="enumClassname">org.pprun.hjpetstore.domain.Supplier$SupplierStatus</param>
+  </typedef>
+  <typedef class="org.pprun.hjpetstore.persistence.StringEnumUserType" name="item_status">
+    <param name="enumClassname">org.pprun.hjpetstore.domain.Item$ItemStatus</param>
+  </typedef>
+  <typedef class="org.pprun.hjpetstore.persistence.StringEnumUserType" name="user_status">
+    <param name="enumClassname">org.pprun.hjpetstore.domain.User$UserStatus</param>
+  </typedef>
+  <typedef class="org.pprun.hjpetstore.persistence.StringEnumUserType" name="address_status">
+    <param name="enumClassname">org.pprun.hjpetstore.domain.Address$AddressStatus</param>
+  </typedef>
+  <typedef class="org.pprun.hjpetstore.persistence.StringEnumUserType" name="payment_partner_status">
+    <param name="enumClassname">org.pprun.hjpetstore.domain.PaymentPartner$PaymentPartnerStatus</param>
+  </typedef>
+</hibernate-mapping>

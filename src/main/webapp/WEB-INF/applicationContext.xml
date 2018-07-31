@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+       http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+      <!-- Configurer that replaces ${...} placeholders with values from properties files -->
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>WEB-INF/application.properties</value>
+                <value>WEB-INF/jdbc.properties</value>
+                <value>WEB-INF/bi.properties</value>
+            </list>
+        </property>
+    </bean>
+
+    <import resource="monitor.xml" />
+    <import resource="bi.xml" />
+
+      <!--
+          Service Beans.
+          Transaction advice gets applied through the AOP configuration below.
+       -->
+    <bean id="categoryService" class="org.pprun.hjpetstore.service.CategoryServiceImpl">
+        <property name="categoryDao" ref="categoryDao"/>
+    </bean>
+
+    <bean id="itemService" class="org.pprun.hjpetstore.service.ItemServiceImpl">
+        <property name="itemDao" ref="itemDao"/>
+    </bean>
+
+    <bean id="orderService" class="org.pprun.hjpetstore.service.OrderServiceImpl">
+        <property name="securityServiceRestClient" ref="securityServiceRestClient"/>
+        <property name="paymentRestClient" ref="paymentRestClient"/>
+        <property name="hjpetstoreOrderQueueSender" ref="hjpetstoreOrderQueueSender"/>
+        <property name="chargeOrderRetryQueueSender" ref="chargeOrderRetryQueueSender"/>
+        <property name="hjpetstoreBackOrderedTopicSender" ref="hjpetstoreBackOrderedTopicSender"/>
+        <property name="userService" ref="userService"/>
+        <property name="orderDao" ref="orderDao"/>
+        <property name="itemDao" ref="itemDao"/>
+    </bean>
+    
+    <bean id="productService" class="org.pprun.hjpetstore.service.ProductServiceImpl">
+        <property name="productDao" ref="productDao"/>
+    </bean>
+
+    <bean id="userService" class="org.pprun.hjpetstore.service.UserServiceImpl">
+        <property name="userDao" ref="userDao"/>
+        <property name="categoryDao" ref="categoryDao"/>
+    </bean>
+
+    <bean id="securityService" class="org.pprun.hjpetstore.service.rest.SecurityServiceImpl">
+        <property name="rsaKeyDao" ref="rsaKeyDao"/>
+        <property name="paymentPartnerDao" ref="paymentPartnerDao"/>
+    </bean>
+    
+    <!-- rest -->
+    <bean id="hjpetstoreServiceImpl" class="org.pprun.hjpetstore.service.rest.HjpetstoreServiceImpl">
+        <property name="orderDao" ref="orderDao"/>
+        <property name="productDao" ref="productDao"/>
+        <property name="userDao" ref="userDao"/>
+    </bean>
+
+
+    <!-- REST client -->
+    <!-- call to internal security service -->
+    <bean id="securityServiceRestClient" class="org.pprun.hjpetstore.web.rest.client.SecurityServiceRestClientImpl">
+        <property name="restTemplate" ref="restTemplate"/>
+<!--        <property name="username" value="${rest.securityService.username}" />
+        <property name="password" value="${rest.securityService.password}" />-->
+        <property name="apiKey" value="${rest.securityService.apiKey}" />
+        <property name="userService" ref="userService"/>
+        <property name="paymentPartnerUrl" value="${rest.securityService.paymentpartner.url}" />
+        <property name="rsaKeyUrl" value="${rest.securityService.rsakey.url}" />
+        <property name="encryptUrl" value="${rest.securityService.encrypt.url}" />
+        <property name="decryptUrl" value="${rest.securityService.decrypt.url}" />
+        <property name="encryptForPartnerUrl" value="${rest.securityService.encryptForPartnerUrl.url}" />
+    </bean>
+
+    <!-- call to external payment service -->
+    <bean id="paymentRestClient" class="org.pprun.hjpetstore.web.rest.partner.client.PaymentRestClientImpl">
+        <property name="restTemplate" ref="restTemplate"/>
+        <property name="securityServiceRestClient" ref="securityServiceRestClient"/>
+<!--        <property name="username" value="${rest.securityService.username}" />
+        <property name="password" value="${rest.securityService.password}" />-->
+        <property name="apiKey" value="${rest.securityService.apiKey}" />
+        <property name="userService" ref="userService"/>
+        <property name="validateUrl" value="${rest.paymentService.validate.url}" />
+        <property name="chargeUrl" value="${rest.paymentService.charge.url}" />
+    </bean>
+
+    <!-- the template can be used to call home-grown or external RESTful service -->
+    <bean id="restTemplate" class="org.springframework.web.client.RestTemplate">
+        <property name="requestFactory">
+            <bean class="org.springframework.http.client.CommonsClientHttpRequestFactory">
+                <constructor-arg>
+                    <bean class="org.apache.commons.httpclient.HttpClient">
+                        <constructor-arg index="0">
+                            <bean id="httpClientParams" class="org.apache.commons.httpclient.params.HttpClientParams">
+                                <property name="authenticationPreemptive" value="true"/>
+                            </bean>
+                        </constructor-arg>
+                        <constructor-arg index="1">
+                            <bean class="org.apache.commons.httpclient.MultiThreadedHttpConnectionManager">
+                                <property name="params">
+                                    <bean class="org.apache.commons.httpclient.params.HttpConnectionManagerParams">
+                                        <property name="soTimeout" value="${rest.service.timeout}" />
+                                        <property name="connectionTimeout" value="${rest.service.connectionTimeout}" />
+                                        <property name="defaultMaxConnectionsPerHost" value="${rest.service.maxConnections}" />
+                                        <property name="maxTotalConnections" value="${rest.service.maxTotalConnections}" />
+                                        <property name="staleCheckingEnabled" value="${rest.service.staleCheckEnabled}" />
+                                    </bean>
+                                </property>
+                            </bean>
+                        </constructor-arg>
+                    </bean>
+                </constructor-arg>
+            </bean>
+        </property>
+        <!--
+            if we add other customized messageConverter, we have to list all those Spring default
+            becuase this will overwite the pre-defined ones.
+        -->
+<!--        <property name="messageConverters">
+            <list>
+                <bean class="org.springframework.http.converter.xml.SourceHttpMessageConverter"/>
+            </list>
+        </property>-->
+    </bean>
+
+    <bean id="xpathTemplate" class="org.springframework.xml.xpath.Jaxp13XPathTemplate"/>
+
+    <!-- transaction management -->
+    <aop:config>
+        <!--
+            This definition creates auto-proxy infrastructure based on the given pointcut,
+            expressed in AspectJ pointcut language.
+            We might simply this configuration by making use of the powerful pointcut expression,
+            but if express clearly, it is useful and important for new team member to
+            understand the whole Transacion weaving/configuration, transaction is vital for business.
+
+            Spring recommends that you only annotate concrete classes (and methods of concrete classes) with
+            the @Transactional annotation, as opposed to annotating interfaces.
+        -->
+        <aop:advisor pointcut="execution(public * org.pprun.hjpetstore.service.CategoryServiceImpl.*(..))" advice-ref="txAdvice"/>
+        <aop:advisor pointcut="execution(public * org.pprun.hjpetstore.service.ItemServiceImpl.*(..))" advice-ref="txAdvice"/>
+        <aop:advisor pointcut="execution(public * org.pprun.hjpetstore.service.OrderServiceImpl.*(..))" advice-ref="txAdvice"/>
+        <aop:advisor pointcut="execution(public * org.pprun.hjpetstore.service.ProductServiceImpl.*(..))" advice-ref="txAdvice"/>
+        <aop:advisor pointcut="execution(public * org.pprun.hjpetstore.service.UserServiceImpl.*(..))" advice-ref="txAdvice"/>
+
+        <!-- remote service might have different advice -->
+        <aop:advisor pointcut="execution(public * org.pprun.hjpetstore.service.rest.HjpetstoreServiceImpl.*(..))" advice-ref="txAdvice"/>
+        <aop:advisor pointcut="execution(public * org.pprun.hjpetstore.service.rest.SecurityServiceImpl.*(..))" advice-ref="txAdvice"/>
+
+        <!--
+                This definition creates auto-proxy infrastructure based on the given pointcut,
+                expressed in AspectJ pointcut language. 
+                applying the advice named "userEmailAdvice" to insertUser of UserServiceImpl
+        -->
+        <aop:advisor pointcut="execution(public * org.pprun.hjpetstore.service.UserServiceImpl.insertUser(..))" advice-ref="userEmailAdvice"/>
+
+        <!--
+                This definition creates auto-proxy infrastructure based on the given pointcut,
+                expressed in AspectJ pointcut language.
+                applying the advice named "orderEmailAdvice" to insertOrder(Order) method of OrderServiceImpl
+        -->
+        <aop:advisor pointcut="execution(public * org.pprun.hjpetstore.service.OrderServiceImpl.insertOrder(..))" advice-ref="orderEmailAdvice"/>
+
+        <!-- retry advisor -->
+        <aop:advisor pointcut="execution(public * org.pprun.hjpetstore.web.rest.client.SecurityServiceRestClientImpl.*(..))" advice-ref="externalCallRetryAdvice"/>
+        <aop:advisor pointcut="execution(public * org.pprun.hjpetstore.web.rest.partner.client.PaymentRestClientImpl.*(..))" advice-ref="externalCallRetryAdvice"/>
+        <aop:advisor pointcut="execution(public * org.springframework.mail.javamail.JavaMailSenderImpl.send(..))" advice-ref="externalCallRetryAdvice"/>
+    </aop:config>
+
+    <!--
+        Transaction advice definition, based on method name patterns.
+        Defaults propagation="REQUIRED" for all methods
+        and with read-only hint for all methods which only retrieve data.
+
+        NOTE: it is important to comply with the team internal name convention
+        for this contract, and we DO need '*' pattern to match all methods which
+        is not enumerated in the list.
+    -->
+    <tx:advice id="txAdvice">
+        <tx:attributes>
+            <tx:method name="get*" read-only="true"/>
+            <tx:method name="is*" read-only="true"/>
+            <tx:method name="search*" read-only="true"/>
+            <tx:method name="find*" read-only="true"/>
+            <tx:method name="insert*"/>
+            <tx:method name="save*"/>
+            <tx:method name="update*"/>
+            <tx:method name="*"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <!-- retry advice for external service call -->
+    <bean id="externalCallRetryAdvice" class="org.springframework.batch.retry.interceptor.RetryOperationsInterceptor">
+        <description>
+            Advice for external service call, any exceptions listed in map and specify value to 'true'
+            will result in a complete retry.
+        </description>
+        <property name="retryOperations">
+            <bean class="org.springframework.batch.retry.support.RetryTemplate">
+                <property name="backOffPolicy">
+                    <bean class="org.springframework.batch.retry.backoff.ExponentialBackOffPolicy">
+                        <property name="initialInterval" value="${external.call.retry.initialInterval}" />
+                        <property name="multiplier" value="${external.call.retry.multiplier}" />
+                        <property name="maxInterval" value="${external.call.retry.maxInterval}" />
+                    </bean>
+                </property>
+                <property name="retryPolicy">
+                    <bean class="org.springframework.batch.retry.policy.SimpleRetryPolicy">
+                        <!-- maxAttempts -->
+                        <constructor-arg index="0" value="${external.call.retry.maxAttempts}"/>
+                        <constructor-arg index="1" >
+                            <util:map>
+                                <!-- true means will retry, false means won't -->
+                                <entry key="org.springframework.web.client.RestClientException" value="true"/>
+                                <entry key="org.springframework.mail.MailException" value="true"/>
+                                <entry key="java.net.ConnectException" value="true"/>
+                            </util:map>
+                        </constructor-arg>
+                    </bean>
+                </property>
+            </bean>
+        </property>
+    </bean>
+
+    <!-- MailSender -->
+    <bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+        <property name="host" value="${mail.host}"/>
+        <property name="port" value="${mail.port}"/>
+    </bean>
+    <bean id="SimpleTextEmailSender" class="org.pprun.common.util.SimpleTextEmailSender">
+        <property name="mailSender" ref="mailSender"/>
+        <property name="mailFrom" value="${mail.from}"/>
+    </bean>
+
+  <!-- AOP advice used to send confirmation email after order has been submitted -->
+    <bean id="orderEmailAdvice" class="org.pprun.hjpetstore.service.aop.SendOrderConfirmationEmailAdvice">
+        <property name="mailSender" ref="SimpleTextEmailSender"/>
+        <property name="userService" ref="userService"/>
+    </bean>
+    
+  <!-- AOP advice used to send user key email after user registered -->
+    <bean id="userEmailAdvice" class="org.pprun.hjpetstore.service.aop.SendUserKeyEmailAdvice">
+        <property name="mailSender" ref="SimpleTextEmailSender"/>
+    </bean>
+
+    <!-- Generic validator for User objects, to be used for example by the Spring web tier -->
+    <bean id="userValidator" class="org.pprun.hjpetstore.service.validator.UserValidator">
+        <constructor-arg index="0" ref="addressValidator" />
+    </bean>
+
+    <bean id="addressValidator" class="org.pprun.hjpetstore.service.validator.AddressValidator"/>
+    <!-- Generic validator for Order objects, to be used for example by the Spring web tier -->
+    <bean id="orderValidator" class="org.pprun.hjpetstore.service.validator.OrderValidator">
+        <constructor-arg index="0" ref="addressValidator" />
+    </bean>
+
+
+    <!--JAXB2 marshaller binder for Java : xml -->
+    <!-- if you have ensured all other configuration are just done,
+        but still got the error when using cURL:
+        Root cause is: Content type 'application/x-www-form-urlencoded' not supported
+        org.springframework.web.HttpMediaTypeNotSupportedException: Content type 'application/x-www-form-urlencoded' not supported
+
+        PLEASE go back here to add your jaxb domain object. :)
+    -->
+    <bean id="jaxb2Marshaller" class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+        <property name="classesToBeBound">
+            <list>
+                <value>org.pprun.hjpetstore.persistence.jaxb.Products</value>
+                <value>org.pprun.hjpetstore.domain.PaymentPartner</value>
+                <value>org.pprun.hjpetstore.domain.RSAKey</value>
+                <value>org.pprun.hjpetstore.persistence.jaxb.DecryptCardNumber</value>
+                <value>org.pprun.hjpetstore.persistence.jaxb.PartnerDecyptCardNumber</value>
+                <value>org.pprun.hjpetstore.persistence.jaxb.EncryptCardNumber</value>
+                <value>org.pprun.hjpetstore.persistence.jaxb.partner.PaymentChargeRequest</value>
+                <value>org.pprun.hjpetstore.persistence.jaxb.partner.PaymentChargeResponse</value>
+                <value>org.pprun.hjpetstore.persistence.jaxb.partner.PaymentValidationRequest</value>
+                <value>org.pprun.hjpetstore.persistence.jaxb.partner.PaymentValidationResponse</value>
+                <value>org.pprun.hjpetstore.persistence.jaxb.supplier.SupplierOrderStatusRequest</value>
+                <value>org.pprun.hjpetstore.persistence.jaxb.supplier.SupplierOrderStatusResponse</value>
+                <value>org.pprun.hjpetstore.persistence.jaxb.BiViewOrderList</value>
+                <value>org.pprun.hjpetstore.persistence.jaxb.CommonError</value>
+            </list>
+        </property>
+        <!-- we can depend on the xsd file for automatically validation -->
+        <!-- <property name="schema" value="classpath:org/springframework/oxm/schema.xsd"/>-->
+    </bean>
+</beans>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.pprun.hjpetstore.domain">
+  <class name="Supplier" table="Supplier">
+    <!--注释里不能有单引号，呵呵 -->
+    <comment>the items supplier.</comment>
+    <id access="field" column="supplierId" name="id" type="long">
+      <generator class="native"/>
+    </id>
+    <!-- A versioned entity. -->
+    <version access="field" name="version" type="long"/>
+    <property length="80" name="supplierName" not-null="true" type="string" unique="true"/>
+    <property length="20" name="status" not-null="true" type="supplier_status"/>
+    <!--
+            A simple uni-directional one-to-one association(Supplier to User
+        -->
+    <many-to-one class="User" column="userId" foreign-key="fk_supplier_userId" name="user" not-null="true" unique="true"/>
+    <!-- We can't change the creation time, so map it with update="false" -->
+    <property access="field" name="createTime" not-null="true" update="false"/>
+    <property access="field" name="updateTime"/>
+    <!--
+            Mapping for Item association.
+            inverse="true" means Item is the owner side (Supplier is the mirror side - inverse),
+            Item will take charge of relationship 'supplierId', which is the foreign-key in Item.
+            If only call supplier.getItems().add(newItem), no changes are made persistent.
+            But only call item.setSupplier(suppiler) will make the relationship set - means the foreign-key will be persisted.
+
+            It does not usually make sense to enable cascade on a <many-to-one>
+            or <many-to-many>  association. Cascade is often useful for
+            <one-to-one> and <one-to-many>  associations.
+        -->
+    <set cascade="save-update" inverse="true" name="items">
+      <key column="supplierId" not-null="false"/>
+      <one-to-many class="Item"/>
+    </set>
+  </class>
+</hibernate-mapping>

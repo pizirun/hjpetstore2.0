@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.pprun.hjpetstore.domain">
+  <class name="Item" table="Item">
+    <comment>The item or artical that a shop sells</comment>
+    <id access="field" column="itemId" name="id" type="long">
+      <generator class="native"/>
+    </id>
+    <!-- A versioned entity. -->
+    <version access="field" name="version" type="long"/>
+    <property length="10" name="itemName" not-null="true" type="string" unique="true"/>
+    <property name="listPrice" precision="10" scale="2" type="big_decimal"/>
+    <property name="unitCost" precision="10" scale="2" type="big_decimal"/>
+    <property length="20" name="status" not-null="true" type="item_status"/>
+    <property length="80" name="attr1" type="string"/>
+    <property length="80" name="attr2" type="string"/>
+    <property length="80" name="attr3" type="string"/>
+    <property length="80" name="attr4" type="string"/>
+    <property length="80" name="attr5" type="string"/>
+    <!--
+            owner side of A bidirectional many-to-one association on a foreign key productId
+        -->
+    <many-to-one class="Product" column="productId" foreign-key="fk_item_productId" name="product" not-null="true"/>
+    <!-- A bidirectional one-to-one association on a foreign key inventoryId -->
+    <many-to-one class="Inventory" column="inventoryId" foreign-key="fk_item_inventoryId" name="inventory" not-null="true" unique="true"/>
+    <!--
+            owner side of A bidirectional many-to-one association on a foreign key supplierId
+        -->
+    <many-to-one class="Supplier" column="supplierId" foreign-key="fk_item_supplierId" name="supplier" not-null="true"/>
+    <!-- We can't change the creation time, so map it with update="false" -->
+    <property access="field" name="createTime" not-null="true" update="false"/>
+    <property access="field" name="updateTime"/>
+  </class>
+</hibernate-mapping>

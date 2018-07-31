@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+	  http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc.xsd
+          http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+          http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+          http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+          http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd
+">
+
+    <context:property-placeholder location="classpath:test-jdbc.properties"/>
+
+    <context:annotation-config/>
+
+
+    <!-- Local C3P0 DataSource that works in any environment -->
+    <!-- ("close" method to be called on shutdown) -->
+    <bean id="testDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+        <property name="driverClass" value="${jdbc.driverClassName}"/>
+        <property name="jdbcUrl" value="${jdbc.url}"/>
+        <property name="user" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <property name="minPoolSize" value="${jdbc.minPoolSize}"/>
+        <property name="initialPoolSize" value="${jdbc.initialPoolSize}"/>
+        <property name="maxPoolSize" value="${jdbc.maxPoolSize}"/>
+        <property name="maxStatements" value="${jdbc.maxStatements}"/>
+        <property name="maxIdleTime" value="${jdbc.maxIdleTime}"/>
+        <property name="checkoutTimeout" value="${jdbc.checkoutTimeout}"/>
+    </bean>
+
+    <!-- Local Hibernate SessionFactory -->
+    <bean id="sessionFactory" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+        <property name="dataSource" ref="testDataSource"/>
+
+        <!--
+            externalized the hibernate configuration for more easier maintain and
+            different strategy, such as this without cluster cache.
+            TODO: use GlassFish embedded for JTA
+        -->
+        <property name="configLocation" value="classpath:hibernate.cfg.xml" />
+
+        <!-- Interceptor to set the createTime and updateTime fields automatically -->
+        <property name="entityInterceptor">
+            <bean class="org.pprun.hjpetstore.persistence.AuditInterceptor" />
+        </property>
+        <property name="eventListeners">
+            <map>
+                <entry key="merge">
+                    <bean class="org.springframework.orm.hibernate3.support.IdTransferringMergeEventListener"/>
+                </entry>
+            </map>
+        </property>
+    </bean>
+
+    <!-- Transaction manager for a single Hibernate SessionFactory
+         TODO: use GlassFish embedded for JTA
+    -->
+    <bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sessionFactory"/>
+    </bean>
+
+    <aop:config>
+        <aop:advisor pointcut="execution(public * org.pprun.hjpetstore.dao.hibernate..*(..))" advice-ref="txAdvice"/>
+    </aop:config>
+
+    <!--
+        Transaction advice definition, based on method name patterns.
+        Defaults propagation="REQUIRED" for all methods
+        and with read-only hint for all methods which only retrieve data.
+
+        NOTE: it is important to comply with the team internal name convention
+        for this contract, and we DO need '*' pattern to match all methods which
+        is not enumerated in the list.
+    -->
+    <tx:advice id="txAdvice" >
+        <tx:attributes>
+            <tx:method name="get*" read-only="true"/>
+            <tx:method name="is*" read-only="true"/>
+            <tx:method name="search*" read-only="true"/>
+            <tx:method name="find*" read-only="true"/>
+            <tx:method name="insert*"/>
+            <tx:method name="save*"/>
+            <tx:method name="update*"/>
+            <tx:method name="*"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <!--  {@literal DAO} annotated {@code @Repository}is eligible for Spring DataAccessException translation. -->
+    <bean class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor" />
+</beans>

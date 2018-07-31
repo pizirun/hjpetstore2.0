@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.pprun.hjpetstore.domain">
+  <class name="Category" table="Category">
+    <comment>The product category</comment>
+    <id access="field" column="categoryId" name="id" type="long">
+      <generator class="native"/>
+    </id>
+    <!-- A versioned entity. -->
+    <version access="field" name="version" type="long"/>
+    <property length="80" name="categoryName" not-null="true" type="string" unique="true"/>
+    <property length="255" name="categoryDesc" type="string"/>
+    <!-- We can't change the creation time, so map it with update="false" -->
+    <property access="field" name="createTime" not-null="true" update="false"/>
+    <property access="field" name="updateTime"/>
+    <!-- A bidirectional one-to-one association on a foreign key categoryId -->
+    <one-to-one cascade="all,delete-orphan" class="Banner" name="banner" property-ref="category"/>
+    <!--
+            Mapping for the bidirectional one-to-many association for category : product
+
+               inverse="true" means Product is the owner side (Category is the mirror side - inverse),
+               Product will take charge of relationship 'categoryId', which is the foreign-key in Product.
+               If only call category.getProducts().add(newProduct), no changes are made persistent.
+               But only call product.setCategory(category) will make the relationship set - means the foreign-key will be persisted.
+        -->
+    <set cascade="save-update" inverse="true" name="products">
+      <key column="categoryId" not-null="true"/>
+      <one-to-many class="Product"/>
+    </set>
+  </class>
+</hibernate-mapping>

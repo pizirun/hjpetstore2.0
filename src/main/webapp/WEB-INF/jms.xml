@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:jms="http://www.springframework.org/schema/jms"
+       xmlns:jee="http://www.springframework.org/schema/jee"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+       http://www.springframework.org/schema/jms http://www.springframework.org/schema/jms/spring-jms-3.0.xsd
+       http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-3.0.xsd">
+
+    <!-- NOTE:
+         In reality production environment, hjpetstore, each supplier should have their own java EE
+         encironements, so the connectionFacotry, the queue/topic, the transactionManager,
+         the jmsTemplate are all separated, in order to avoid set up all of these,
+         we siimply couple them together for easy demonstration.
+    -->
+    <!-- JNDI Jms resource at hjpetstore side, hjpetstore launches the message broker -->
+    <!-- XA-configured ConnectionFactory -->
+    <jee:jndi-lookup id="jmsConnectionFactory" jndi-name="jms/hjpetstore.connectionFactory"/>
+    <jee:jndi-lookup id="hjpetstoreOrderQueue" jndi-name="jms/hjpetstore.order.queue"/>
+    <jee:jndi-lookup id="chargeOrderRetryQueue" jndi-name="jms/hjpetstore.chargeOrder.retry.queue"/>
+    <jee:jndi-lookup id="supplierResponseQueue" jndi-name="jms/hjpetstore.supplier.response.queue"/>
+    <jee:jndi-lookup id="hjpetstoreBackOrderedTopic" jndi-name="jms/hjpetstore.backOrdered.topic"/>
+
+    <!-- A JNDI resolver, will be used by JmsTemplate send method with jndi desitnation parameter -->
+    <bean id="jmsDestResolver" class=" org.springframework.jms.support.destination.JndiDestinationResolver"/>
+
+    <!-- the producer side -->
+    <bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate"
+          p:connectionFactory-ref="jmsConnectionFactory"
+          p:destinationResolver-ref="jmsDestResolver" p:sessionTransacted="true"/>
+
+
+    <!-- notfiy the suppiler the order initiated -->
+    <bean id="hjpetstoreOrderQueueSender" class="org.pprun.hjpetstore.service.jms.HjpetstoreOrderQueueSender" >
+        <property name="jmsTemplate" ref="jmsTemplate"/>
+        <property name="hjpetstoreOrderQueue" ref="hjpetstoreOrderQueue"/>
+    </bean>
+
+    <!-- to notifiy supplier hjpetstore is back ordered -->
+    <bean id="hjpetstoreBackOrderedTopicSender" class="org.pprun.hjpetstore.service.jms.HjpetstoreBackOrderedTopicSender" >
+        <property name="jmsTemplate" ref="jmsTemplate"/>
+        <property name="hjpetstoreBackOrderedTopic" ref="hjpetstoreBackOrderedTopic"/>
+    </bean>
+
+    <!-- listen to supplier order response status -->
+    <bean id="jmsSupplierResponseContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="jmsConnectionFactory"/>
+        <property name="destination" ref="supplierResponseQueue"/>
+        <property name="messageListener" ref="supplierResponseMessageListener"/>
+        <property name="transactionManager" ref="transactionManager"/>
+        <!--
+        some online forum said -
+        Note that the sessionTransacted property of the listener container must be set to true or it won't work!
+        -->
+        <property name="sessionTransacted" value="true"/>
+        <property name="concurrency" value="1-10"/>
+    </bean>
+
+    <!-- supplierResponseMessageListener is specific because it should be thread-safe call into orderService.update,
+        instead of code the multi-thread/synchronized the service method,
+        we are using spring built-in tool -
+        http://static.springsource.org/spring/docs/2.0.x/reference/aop-api.html#aop-ts-pool
+        The only requirement is the dependency 'commons-pool'
+    -->
+    <bean id="supplierResponseMessageListenerTarget"
+        class="org.pprun.hjpetstore.service.jms.SupplierResponseMessageListener"
+        scope="prototype">
+        <description>Create a prototype supplierResponseMessageListener with its own copy of orderService</description>
+        <property name="orderService" ref="orderService"/>
+    </bean>
+
+    <bean id="supplierResponseMessageListenerPoolTargetSource" class="org.springframework.aop.target.CommonsPoolTargetSource">
+      <property name="targetBeanName" value="supplierResponseMessageListenerTarget"/>
+      <!-- TODO: set it according to load test, based on orders hit/sec -->
+      <property name="maxSize" value="25"/>
+    </bean>
+    <!-- this is the Message Driven POJO (MDP) for listening on supplier response the order status -->
+    <bean id="supplierResponseMessageListener" class="org.springframework.aop.framework.ProxyFactoryBean">
+      <property name="targetSource" ref="supplierResponseMessageListenerPoolTargetSource"/>
+    </bean>
+
+    <!-- to notifiy retry chargeOrder -->
+    <bean id="chargeOrderRetryQueueSender" class="org.pprun.hjpetstore.service.jms.ChargeOrderRetryQueueSender" >
+        <property name="jmsTemplate" ref="jmsTemplate"/>
+        <property name="retryQueue" ref="chargeOrderRetryQueue"/>
+    </bean>
+
+    <!-- listen to retry chargeOrder message -->
+    <bean id="chargeOrderRetryContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="jmsConnectionFactory"/>
+        <property name="destination" ref="chargeOrderRetryQueue"/>
+        <property name="messageListener" ref="chargeOrderRetryMessageListener"/>
+        <property name="transactionManager" ref="transactionManager"/>
+        <!--
+        some online forum said -
+        Note that the sessionTransacted property of the listener container must be set to true or it won't work!
+        -->
+        <property name="sessionTransacted" value="true"/>
+        <property name="concurrency" value="1-10"/>
+    </bean>
+
+    <!-- chargeOrderRetryMessageListener is specific because it should be thread-safe call into orderService.chargeOrder,
+        instead of code the multi-thread/synchronized the service method,
+        we are using spring built-in tool -
+        http://static.springsource.org/spring/docs/2.0.x/reference/aop-api.html#aop-ts-pool
+        The only requirement is the dependency 'commons-pool'
+    -->
+    <bean id="chargeOrderRetryMessageListenerTarget"
+        class="org.pprun.hjpetstore.service.jms.ChargeOrderRetryMessageListener"
+        scope="prototype">
+        <description>Create a prototype ChargeOrderRetryMessageListener with its own copy of orderService</description>
+        <property name="orderService" ref="orderService"/>
+    </bean>
+
+    <bean id="chargeOrderRetryMessageListenerPoolTargetSource" class="org.springframework.aop.target.CommonsPoolTargetSource">
+      <property name="targetBeanName" value="chargeOrderRetryMessageListenerTarget"/>
+      <!-- TODO: set it according to load test, based on orders hit/sec -->
+      <property name="maxSize" value="25"/>
+    </bean>
+    <!-- this is the Message Driven POJO (MDP) for listening on supplier response the order status -->
+    <bean id="chargeOrderRetryMessageListener" class="org.springframework.aop.framework.ProxyFactoryBean">
+      <property name="targetSource" ref="chargeOrderRetryMessageListenerPoolTargetSource"/>
+    </bean>
+
+    <!-- for jms, Transaction manager refer the one defined in dataAccessContext-xxx.xml:
+        1. it is injected into MessageListenerContainer(the consumer)
+        2. In a managed environment, setting these values is the responsibility of
+        the environment's transactional infrastructure,
+        so these values are ignored by the vendor's wrapper to the JMS Connection -->
+<!--    <bean id="transactionManager" class="org.springframework.transaction.jta.JtaTransactionManager"/>-->
+
+
+    <!-- ================== supplier side mock ==================== -->
+    <!-- notfiy the hjpetstore the current order status -->
+    <bean id="supplierResponseQueueSender" class="org.pprun.hjpetstore.service.jms.supplier.SupplierResponseQueueSender" >
+        <property name="jmsTemplate" ref="jmsTemplate"/>
+        <property name="supplierResponseQueue" ref="supplierResponseQueue"/>
+    </bean>
+
+    <!-- listener for async -->
+    <!-- mock the process at supplier side to response order request -->
+    <!-- East Pet Company (which is supplier name set in table supplier -->
+    <bean id="eastPetCompanyOrderQueueContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="jmsConnectionFactory"/>
+        <property name="destination" ref="hjpetstoreOrderQueue"/>
+        <property name="messageListener" ref="eastPetCompanyOrderQueueMessageListener"/>
+        <!-- This is the mock for supplier side, it should not use the same Transaction manager
+             as hjpetstore side. They are different business in fact.
+        -->
+        <property name="transactionManager" ref="transactionManager"/>
+        <property name="concurrency" value="1-10"/>
+        <property name="messageSelector" value="supplier = 'East Pet Company'"/>
+        <!--
+        some online forum said -
+        Note that the sessionTransacted property of the listener container must be set to true or it won't work!
+        -->
+        <property name="sessionTransacted" value="true"/>
+    </bean>
+
+    <!-- this is the Message Driven POJO (MDP) mocked for supplier (East Pet Company)
+         listening on the incoming order request from hjpetstore -->
+    <bean id="eastPetCompanyOrderQueueMessageListener" class="org.pprun.hjpetstore.service.jms.supplier.EastPetCompanyOrderQueueMessageListener" />
+
+    <!-- Beijing Little Pet Supplier (which is supplier name set in table supplier -->
+    <bean id="bjLittlePetSupplierOrderQueueContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="jmsConnectionFactory"/>
+        <property name="destination" ref="hjpetstoreOrderQueue"/>
+        <property name="messageListener" ref="bjLittlePetSupplierOrderQueueMessageListener"/>
+        <!-- This is the mock for supplier side, it should not use the same Transaction manager
+             as hjpetstore side. They are different business in fact.
+        -->
+        <property name="transactionManager" ref="transactionManager"/>
+        <property name="concurrency" value="1-10"/>
+        <property name="messageSelector" value="supplier = 'Beijing Little Pet Supplier'"/>
+        <!--
+        some online forum said -
+        Note that the sessionTransacted property of the listener container must be set to true or it won't work!
+        -->
+        <property name="sessionTransacted" value="true"/>
+    </bean>
+
+    <!-- this is the Message Driven POJO (MDP) mocked for supplier (Beijing Little Pet Supplier)
+         listening on the incoming order request(the topic) from hjpetstore -->
+    <bean id="bjLittlePetSupplierOrderQueueMessageListener" class="org.pprun.hjpetstore.service.jms.supplier.BjLittlePetSupplierOrderQueueMessageListener" />
+
+
+    <!-- mock the process at supplier(East Pet Company) side to response the order backed topic -->
+    <bean id="eastPetCompanyBackOrderedTopicContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="jmsConnectionFactory"/>
+        <property name="destination" ref="hjpetstoreBackOrderedTopic"/>
+        <property name="messageListener" ref="eastPetCompanyBackOrderedTopicMessageListener"/>
+        <!-- This is the mock for supplier side, it should not use the same Transaction manager
+             as hjpetstore side. They are different business in fact.
+        -->
+        <property name="transactionManager" ref="transactionManager"/>
+
+        <!-- The number of concurrent sessions/consumers to start for each listener.
+             Can either be a simple number indicating the maximum number (e.g. "5")
+             or a range indicating the lower as well as the upper limit (e.g. "3-5").
+             Note that a specified minimum is just a hint and might be ignored at runtime.  Default is 1;
+             keep concurrency limited to 1 in case of a topic listener or if queue ordering is important;
+             consider raising it for general queues.
+        -->
+        <property name="concurrency" value="1"/>
+        <!--
+        some online forum said -
+        Note that the sessionTransacted property of the listener container must be set to true or it won't work!
+        -->
+        <property name="sessionTransacted" value="true"/>
+    </bean>
+    <bean id="eastPetCompanyBackOrderedTopicMessageListener" class="org.pprun.hjpetstore.service.jms.supplier.EastPetCompanyBackOrderedTopicMessageListener" />
+
+    <!-- mock the process at supplier(Beijing Little Pet Supplier) side to response the order backed topic -->
+    <bean id="bjLittlePetSupplierBackOrderedTopicContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="jmsConnectionFactory"/>
+        <property name="destination" ref="hjpetstoreBackOrderedTopic"/>
+        <property name="messageListener" ref="bjLittlePetSupplierBackOrderedTopicMessageListener"/>
+        <!-- This is the mock for supplier side, it should not use the same Transaction manager
+             as hjpetstore side. They are different business in fact.
+        -->
+        <property name="transactionManager" ref="transactionManager"/>
+        <property name="concurrency" value="1"/>
+        <!--
+        some online forum said -
+        Note that the sessionTransacted property of the listener container must be set to true or it won't work!
+        -->
+        <property name="sessionTransacted" value="true"/>
+    </bean>
+    <bean id="bjLittlePetSupplierBackOrderedTopicMessageListener" class="org.pprun.hjpetstore.service.jms.supplier.BjLittlePetSupplierBackOrderedTopicMessageListener" />
+
+
+</beans>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+       http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.0.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+    <bean id="orderIncomeExport" class="org.pprun.hjpetstore.service.bi.OrderIncomeExport" >
+        <property name="jaxb2Marshaller" ref="jaxb2Marshaller" />
+        <property name="exportFolder" ref="exportFolder" />
+        <property name="orderService" ref="orderService" />
+    </bean>
+
+    <task:scheduled-tasks scheduler="orderIncomeExportScheduler">
+        <task:scheduled ref="orderIncomeExport" method="exportOrderIncome" cron="${order.income.export.schedule}"/>
+    </task:scheduled-tasks>
+
+    <task:scheduler id="orderIncomeExportScheduler" pool-size="${order.income.export.pool.size}"/>
+    
+    <!-- file system resource used by PaymentController -->
+    <bean id="exportFolder" class="org.springframework.core.io.UrlResource" >
+        <constructor-arg>
+            <value>${order.income.export.folder}</value>
+        </constructor-arg>
+    </bean>
+
+</beans>

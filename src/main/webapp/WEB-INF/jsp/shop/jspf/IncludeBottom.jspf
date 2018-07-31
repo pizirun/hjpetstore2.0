@@ -1,0 +1,19 @@
+<p style="bottom: 5%;">&nbsp;</p>
+
+<table align="center" width="100%"  border="0" cellspacing="0" cellpadding="0">
+    <tr>
+        <td align="right">
+            <a href="http://www.springframework.org">
+                <img border="0" src="../images/poweredBySpring.gif" alt="Powered by the Spring Framework"/>
+            </a>
+
+
+            <a href="http://www.hibernate.org">
+                <img border="0" src="../images/poweredByHibernate.gif" alt="Powered by Hibernate"/>
+            </a>
+        </td>
+        <td width="2%" />
+    </tr>
+</table>
+</body>
+</html>

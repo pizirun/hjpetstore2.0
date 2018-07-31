@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+       http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd">
+
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>WEB-INF/application.properties</value>
+            </list>
+        </property>
+    </bean>
+
+	<!--
+            To enable autodetection of such annotated controllers, you add component scanning to your configuration.
+            The controllers are autodetected POJOs labeled with the @Controller annotation.
+	-->
+    <context:component-scan base-package="org.pprun.hjpetstore.web.rest"/>
+
+	<!--
+            The form-based controllers within this application provide @RequestMapping
+            annotations at the class level for path mapping URLs
+            and @RequestMapping at the method level for request type mappings (e.g., GET and POST).
+
+            In contrast, all other controller which are not form-based
+            provides @RequestMapping only at the method level for path mapping URLs.
+
+            DefaultAnnotationHandlerMapping is driven by these annotations and is
+            Registered by default in DispatcherServlet on Java 5+.
+            NOTE: If you define custom HandlerMapping beans in your DispatcherServlet context,
+            you need to add a DefaultAnnotationHandlerMapping bean explicitly,
+            since custom HandlerMapping beans replace the default mapping strategies.
+	-->
+    <bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping"/>
+
+    <bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+    <!--         19.9.2 HTTP Message Conversion
+            several main media type converters have been registered,
+            but if we overwrite tihs property, we have to list all our need-->
+        
+        <property name="messageConverters">
+            <list>
+                <bean class="org.springframework.http.converter.xml.MarshallingHttpMessageConverter">
+                    <property name="supportedMediaTypes">
+                        <list>
+                            <value>application/xml</value>
+                            <value>text/xml</value>
+                        </list>
+                    </property>
+                    <property name="marshaller" ref="jaxb2Marshaller" />
+                    <property name="unmarshaller" ref="jaxb2Marshaller" />
+                </bean>
+                <bean class="org.springframework.http.converter.StringHttpMessageConverter"/>
+            </list>
+        </property>
+    </bean>
+
+    <!-- view resolver -->
+    <bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+        <property name="mediaTypes">
+            <map>
+                <entry key="xml" value="application/xml"/>
+                <entry key="html" value="text/html"/>
+            </map>
+        </property>
+        <property name="viewResolvers">
+            <list>
+                <bean class="org.springframework.web.servlet.view.BeanNameViewResolver" p:order="1"/>
+
+                <bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+                    <property name="viewClass" value="org.springframework.web.servlet.view.JstlView"/>
+                    <property name="prefix" value="/WEB-INF/jsp/shop/"/>
+                    <property name="suffix" value=".jsp"/>
+                </bean>
+            </list>
+        </property>
+    </bean>
+
+    <!--
+            This bean resolves specific types of exceptions to corresponding logical
+            view names for error views. The default behaviour of DispatcherServlet
+            is to propagate all exceptions to the servlet container: this will happen
+            here with all other types of exceptions.
+    -->
+<!--    <bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+        <property name="exceptionMappings">
+            <props>
+                <prop key="org.springframework.dao.DataAccessException">dataAccessFailure</prop>
+                <prop key="org.springframework.transaction.TransactionException">dataAccessFailure</prop>
+            </props>
+        </property>
+    </bean>-->
+   
+    <bean id="defaultHandlerMapping" class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping"/>
+
+    <!-- need this one if we are letting spring 2.0 style and 3.0 (AnnotationMethodHandlerAdapter) coexist -->
+    <bean class="org.springframework.web.servlet.mvc.SimpleControllerHandlerAdapter" />
+
+    <bean name="/shop/index.html" class="org.springframework.web.servlet.mvc.ParameterizableViewController">
+        <property name="viewName" value="index"/>
+    </bean>
+
+    <bean name="/shop/searchProducts.html" class="org.pprun.hjpetstore.web.SearchProductsController">
+        <property name="productService" ref="productService"/>
+    </bean>
+
+    <bean name="/shop/viewCategory.html" class="org.pprun.hjpetstore.web.ViewCategoryController">
+        <property name="categoryService" ref="categoryService"/>
+        <property name="productService" ref="productService"/>
+    </bean>
+
+    <bean name="/shop/viewItem.html" class="org.pprun.hjpetstore.web.ViewItemController">
+        <property name="itemService" ref="itemService"/>
+    </bean>
+
+    <bean name="/shop/viewProduct.html" class="org.pprun.hjpetstore.web.ViewProductController">
+        <property name="itemService" ref="itemService"/>
+        <property name="productService" ref="productService"/>
+    </bean>
+
+    <bean name="/shop/viewCart.html" class="org.pprun.hjpetstore.web.ViewCartController">
+        <property name="successView" value="Cart"/>
+    </bean>
+
+    <bean name="/shop/updateCartQuantities.html" class="org.pprun.hjpetstore.web.UpdateCartQuantitiesController"/>
+
+    <bean name="/shop/addItemToCart.html" class="org.pprun.hjpetstore.web.AddItemToCartController">
+        <property name="itemService" ref="itemService"/>
+    </bean>
+
+    <bean name="/shop/removeItemFromCart.html" class="org.pprun.hjpetstore.web.RemoveItemFromCartController"/>
+
+    <bean name="/shop/checkout.html" class="org.pprun.hjpetstore.web.ViewCartController">
+        <property name="successView" value="Checkout"/>
+    </bean>
+
+    <bean name="/shop/signoff.html" class="org.pprun.hjpetstore.web.SignoffController">
+        <property name="successView" value="redirect:/shop/index.html"/>
+    </bean>
+
+    <bean name="/shop/signon.html" class="org.pprun.hjpetstore.web.SignonController">
+        <property name="userService" ref="userService"/>
+        <property name="productService" ref="productService"/>
+        <property name="successView" value="/shop/index.html"/>
+        <property name="port" value="${http.port}" />
+    </bean>
+
+    <!--  protected resource need logon firstly -->
+    <bean id="signonInterceptor" class="org.pprun.hjpetstore.web.SignonInterceptor"/>
+        
+    <!-- interceptor to redirect to SSL port to protect sensitive resource -->
+    <bean id="httpsUrlRewritingInterceptor" class="org.pprun.hjpetstore.web.HttpsUrlRewritingInterceptor">
+        <property name="sslPort" value="${ssl.port}" />
+    </bean>
+    
+    <!-- editUser and newOrder need both above interceptor -->
+    <bean id="secureHandlerMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+        <property name="interceptors">
+            <list>
+                <ref bean="httpsUrlRewritingInterceptor" />
+                <ref bean="signonInterceptor"/>
+            </list>
+        </property>
+        <property name="urlMap">
+            <map>
+                <entry key="/shop/editUser.html" value-ref="secure_editUser"/>
+                <entry key="/shop/newOrder.html" value-ref="secure_newOrder"/>
+            </map>
+        </property>
+    </bean>
+
+    <!-- views need signonInterceptor -->
+    <bean id="signonHandlerMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+        <property name="interceptors">
+            <list>
+                <ref bean="signonInterceptor"/>
+            </list>
+        </property>
+        <property name="urlMap">
+            <map>
+                <entry key="/shop/listOrders.html" value-ref="secure_listOrders"/>
+                <entry key="/shop/viewOrder.html" value-ref="secure_viewOrder"/>
+            </map>
+        </property>
+    </bean>
+
+    <!-- signonForm and newUser need httpsUrlRewritingInterceptor -->
+    <bean id="sslHandlerMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+        <property name="interceptors">
+            <list>
+                <ref bean="httpsUrlRewritingInterceptor"/>
+            </list>
+        </property>
+        <property name="urlMap">
+            <map>
+                <entry key="/shop/signonForm.html" value-ref="ssl_signonForm"/>
+                <entry key="/shop/newUser.html" value-ref="ssl_newUser"/>
+            </map>
+        </property>
+    </bean>
+
+    <bean id="secure_editUser" class="org.pprun.hjpetstore.web.UserFormController">
+        <property name="userService" ref="userService"/>
+        <property name="categoryService" ref="categoryService"/>
+        <property name="productService" ref="productService"/>
+        <property name="validator" ref="userValidator"/>
+        <property name="port" value="${http.port}" />
+    </bean>
+
+    <bean id="secure_listOrders" class="org.pprun.hjpetstore.web.ListOrdersController">
+        <property name="orderService" ref="orderService"/>
+    </bean>
+
+    <bean id="secure_newOrder" class="org.pprun.hjpetstore.web.OrderFormController">
+        <property name="userService" ref="userService"/>
+        <property name="orderService" ref="orderService"/>
+        <property name="validator" ref="orderValidator"/>
+        <property name="port" value="${http.port}" />
+    </bean>
+
+    <bean id="secure_viewOrder" class="org.pprun.hjpetstore.web.ViewOrderController">
+        <property name="orderService" ref="orderService"/>
+    </bean>
+
+    <bean id="ssl_signonForm" class="org.springframework.web.servlet.mvc.ParameterizableViewController">
+        <property name="viewName" value="SignonForm"/>
+    </bean>
+
+    <bean id="ssl_newUser" class="org.pprun.hjpetstore.web.UserFormController">
+        <property name="userService" ref="userService"/>
+        <property name="categoryService" ref="categoryService"/>
+        <property name="productService" ref="productService"/>
+        <property name="validator" ref="userValidator"/>
+        <property name="port" value="${http.port}" />
+    </bean>
+
+    <!--
+        Message source for this context, loaded from localized "messages" files.
+    -->
+    <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource" p:basename="messages"/>
+
+    <!-- searchProducts rest GET -->
+    <bean name="products"  class="org.springframework.web.servlet.view.xml.MarshallingView">
+        <constructor-arg ref="jaxb2Marshaller" />
+    </bean>
+
+    <!-- paymentPartner rest GET -->
+    <bean name="paymentPartner" class="org.springframework.web.servlet.view.xml.MarshallingView">
+        <constructor-arg ref="jaxb2Marshaller" />
+    </bean>
+
+    <!-- rsaKey rest GET-->
+    <bean name="rsaKey" class="org.springframework.web.servlet.view.xml.MarshallingView">
+        <constructor-arg ref="jaxb2Marshaller" />
+    </bean>
+
+    <!-- get encryptCardNumber rest -->
+    <bean name="encryptCardNumber" class="org.springframework.web.servlet.view.xml.MarshallingView">
+        <constructor-arg ref="jaxb2Marshaller" />
+    </bean>
+
+    <!-- decryptCardNumber rest POST-->
+    <bean name="decryptCardNumber" class="org.springframework.web.servlet.view.xml.MarshallingView">
+        <constructor-arg ref="jaxb2Marshaller" />
+    </bean>
+
+    <!-- payment partner mock -->
+    <!-- validateCardNumber rest POST -->
+    <bean name="validateCardNumber" class="org.springframework.web.servlet.view.xml.MarshallingView">
+        <constructor-arg ref="jaxb2Marshaller" />
+    </bean>
+
+    <!-- charge rest POST -->
+    <bean name="charge" class="org.springframework.web.servlet.view.xml.MarshallingView">
+        <constructor-arg ref="jaxb2Marshaller" />
+    </bean>
+
+    <!-- supplier mock -->
+    <!-- supplierResponse rest PUT -->
+    <bean name="supplierResponse" class="org.springframework.web.servlet.view.xml.MarshallingView">
+        <constructor-arg ref="jaxb2Marshaller" />
+    </bean>
+
+    <!-- error response -->
+    <bean name="CommonError" class="org.springframework.web.servlet.view.xml.MarshallingView">
+        <constructor-arg ref="jaxb2Marshaller" />
+    </bean>
+<!--
+    JAXB2 marshaller binder for Java : xml 
+     if you have ensured all other configuration are just done,
+        but still got the error when using cURL:
+        Root cause is: Content type 'application/x-www-form-urlencoded' not supported
+        org.springframework.web.HttpMediaTypeNotSupportedException: Content type 'application/x-www-form-urlencoded' not supported
+
+        PLEASE go back here to add your jaxb domain object. :)
+    
+    <bean id="jaxb2Marshaller" class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+        <property name="classesToBeBound">
+            <list>
+                <value>org.pprun.hjpetstore.persistence.jaxb.Products</value>
+                <value>org.pprun.hjpetstore.domain.PaymentPartner</value>
+                <value>org.pprun.hjpetstore.domain.RSAKey</value>
+                <value>org.pprun.hjpetstore.persistence.jaxb.DecryptCardNumber</value>
+                <value>org.pprun.hjpetstore.persistence.jaxb.PartnerDecyptCardNumber</value>
+                <value>org.pprun.hjpetstore.persistence.jaxb.EncryptCardNumber</value>
+                <value>org.pprun.hjpetstore.persistence.jaxb.partner.PaymentChargeRequest</value>
+                <value>org.pprun.hjpetstore.persistence.jaxb.partner.PaymentChargeResponse</value>
+                <value>org.pprun.hjpetstore.persistence.jaxb.partner.PaymentValidationRequest</value>
+                <value>org.pprun.hjpetstore.persistence.jaxb.partner.PaymentValidationResponse</value>
+                <value>org.pprun.hjpetstore.persistence.jaxb.supplier.SupplierOrderStatusRequest</value>
+                <value>org.pprun.hjpetstore.persistence.jaxb.supplier.SupplierOrderStatusResponse</value>
+                <value>org.pprun.hjpetstore.persistence.jaxb.BiViewOrder</value>
+                <value>org.pprun.hjpetstore.persistence.jaxb.BiViewOrderLineItem</value>
+            </list>
+        </property>
+         we can depend on the xsd file for automatically validation 
+         <property name="schema" value="classpath:org/springframework/oxm/schema.xsd"/>
+    </bean>-->
+
+    <!-- file system resource used by PaymentController -->
+<bean id="privateKeyFile" class="org.springframework.core.io.UrlResource" >
+	<constructor-arg>
+     		<value>${private.key.file}</value>
+	</constructor-arg>
+</bean>
+
+</beans>

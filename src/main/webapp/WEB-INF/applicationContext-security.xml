@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This file is not used anymore as Spring Security has been replaced by OAuthFilter -->
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+    xmlns:beans="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:aop="http://www.springframework.org/schema/aop"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+                        http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.0.xsd">
+
+    <global-method-security secured-annotations="enabled">
+        <!-- AspectJ pointcut expression that locates our "post" method and applies security that way
+        <protect-pointcut expression="execution(* org.pprun.hjpetstore.service.rest.SecurityServiceImpl.*(..))" access="ROLE_OPERATOR"/>
+	-->
+    </global-method-security>
+
+
+    <!-- we now don't care other page, only secure rest pages -->
+    <http auto-config="true">
+        <!-- the public rest api -->
+        <intercept-url pattern="/rest/products/**" access="IS_AUTHENTICATED_ANONYMOUSLY" requires-channel="any"/>
+        <intercept-url pattern="/rest/**" access="ROLE_OPERATOR" requires-channel="any"/>
+        <intercept-url pattern="/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+
+<!--        <intercept-url pattern="/**" access="permitAll" />-->
+        <form-login />
+        <logout />
+        <remember-me />
+    </http>
+
+    <!--
+        We have username as the salt for password's MD5, the Usernames/Passwords are:
+            pprun/pprunpprun
+            j2ee/j2eej2ee
+            test/testtest
+    -->
+    <authentication-manager>
+        <authentication-provider>
+        <password-encoder hash="md5"/>
+        <user-service>
+            <user name="pprun" password="ca27a6128e8c68d15d5ef9e2b7cfa903" authorities="ROLE_ADMIN,ROLE_USER,ROLE_OPERATOR" />
+            <user name="j2ee" password="b6dcb0189da62b6b849903dcd57f84be" authorities="ROLE_USER,ROLE_OPERATOR" />
+            <user name="test" password="05a671c66aefea124cc08b76ea6d30bb" authorities="ROLE_USER" />
+        </user-service>
+        </authentication-provider>
+    </authentication-manager>
+
+</beans:beans>

@@ -1,0 +1,16 @@
+<p style="height: 20%;">&nbsp;</p>
+<c:if test="${userSession.user.displayBanner}">
+    <table align="center" cellpadding="5" width="100%">
+        <tr><td>
+                <center>
+                    <!-- The precondition for this Transitive expression is we have to make use
+                         when retrieving User, its associated entities are also retrieved by:
+                         1) explicitly in fetch strategy in dao
+                         2) hibernate.max_fetch_depth
+                    -->
+                    <c:out value="${userSession.user.favCategory.banner.bannerName}" escapeXml="false"/>
+                    &nbsp;
+                </center>
+            </td></tr>
+    </table>
+</c:if>
