@@ -52,5 +52,5 @@ as well as reasonable performance and security.
 Let me know if you have questions
 
 Pprun
-nextry@qq.com
+doublepi@qq.com
 https://github.com/pizirun
