@@ -23,7 +23,6 @@
         </property>
     </bean>
 
-    <import resource="monitor.xml" />
     <import resource="bi.xml" />
 
       <!--

@@ -14,9 +14,6 @@ import javax.crypto.spec.SecretKeySpec;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
-import org.springframework.security.authentication.encoding.MessageDigestPasswordEncoder;
-import org.springframework.security.authentication.encoding.PasswordEncoder;
 
 /**
  * Ideally, we can use commons-codec for the following task, but
@@ -164,34 +161,5 @@ public class MessageDigestUtil {
         }
         String calculatedSignature = rfc2104HmacSha512(stringToSign.toString(), secretKey);
         return calculatedSignature;
-    }
-
-    /**
-     * An MD5 hash help function to be "cryptographically secure", the result is 32 HEX characters.
-     * <p>
-     * It is purpose to be compatible with {@literal Spring's} {@link MessageDigestPasswordEncoder#encodePassword(java.lang.String, java.lang.Object)},
-     * which merges the password with salt as: <br />
-     * {@code password + "{" + salt.toString() + "}" }
-     * 
-     * <ol>
-     * <li>Given a hash, it is computationally infeasible to find an input that produces that hash</li>
-     * <li>Given an input, it is computationally infeasible to find another input that produces the same hash</li>
-     * </ol>
-     *
-     * @param plainText
-     * @param salt
-     * @return the MD5 of the input text
-     * @throws NoSuchAlgorithmException
-     * @throws UnsupportedEncodingException
-     */
-    public static String springMd5PasswordEncod(String password, Object salt) {
-        PasswordEncoder encoder = new Md5PasswordEncoder();
-
-        String md5 = encoder.encodePassword(password, salt);
-        
-        if (log.isDebugEnabled()) {
-            log.debug(password + "[salt=" + salt + "] 's MD5: " + md5);
-        }
-        return md5;
     }
 }

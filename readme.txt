@@ -1,3 +1,48 @@
+Updated 2020/03/01
+-----------------
+
+jes
+---
+java -cp lib/commons-codec-1.3.jar:lib/commons-logging.jar:lib/dnsjava.jar:lib/log4j.jar:lib/jes-1.6.1.jar com.ericdaugherty.mail.server.Mail
+
+
+tomcat https
+------------
+https://tomcat.apache.org/tomcat-9.0-doc/ssl-howto.html#Configuration
+
+mkdir jks
+cd jks
+
+keytool -genkey -alias tomcat -keyalg RSA -keystore localhost-rsa.jks
+
+password: changeit
+
+
+cp localhost-rsa.jks ~/java/apache-tomcat-9.0.30/conf/
+
+
+Mysql
+-----
+mysql: root/root
+
+systemctl status mysql.service mysql.service
+https://www.digitalocean.com/community/tutorials/how-to-install-mysql-on-ubuntu-18-04
+https://www.cnblogs.com/lesliehe/p/7978847.html
+
+
+sudo apt-get remove --purge mysql-\*
+
+sudo mysql_secure_installation
+
+sudo mysql -u root -p
+update mysql.user set authentication_string=PASSWORD('Root@1234'), plugin='mysql_native_password' where user='root';
+grant all on *.* to root@'%' identified by 'Root@1234' with grant option;
+flush privileges;
+
+mysql -u root -p
+
+
+
 Hibernate Jpetstore 2.0 (hjpetstore2)
 -------------------------------------
 https://hjpetstore.dev.java.net/

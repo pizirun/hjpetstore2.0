@@ -5,11 +5,13 @@
     <groupId>org.pprun</groupId>
     <artifactId>hjpetstore</artifactId>
     <packaging>war</packaging>
-    <version>2.1.0-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
     <name>hjpetstore</name>
     <url>http://maven.apache.org</url>
     <properties>
-        <spring.version>3.0.5.RELEASE</spring.version>
+        <spring.version>3.2.10.RELEASE</spring.version>
+        <spring.security.version>3.2.10.RELEASE</spring.security.version>
+        <activemq.version>5.14.1</activemq.version>
         <spring.xml.version>1.5.9</spring.xml.version>
         <spring.batch.version>2.1.2.RELEASE</spring.batch.version>
         <hibernate.version>3.6.1.Final</hibernate.version>
@@ -24,7 +26,6 @@
         <jdom.version>1.1</jdom.version>
         <httpclient.version>3.1</httpclient.version>
         <junit.version>4.8.1</junit.version>
-        <netbeans.hint.deploy.server>Tomcat70</netbeans.hint.deploy.server>
         <project.build.sourceEncoding>UTF8</project.build.sourceEncoding>
     </properties>
 
@@ -36,8 +37,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.0</version>
                 <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                     <showDeprecation>false</showDeprecation>
                     <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
@@ -45,123 +46,18 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
-                <version>2.3</version>
+                <version>3.2.3</version>
                 <configuration>
                     <failOnMissingWebXml>false</failOnMissingWebXml>
                 </configuration>
             </plugin>
-            <!--            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <configuration>
-                    <encoding>${project.build.sourceEncoding}</encoding>
-                </configuration>
-            </plugin>-->
         </plugins>
     </build>
-    <profiles>
-        <profile>
-            <id>endorsed</id>
-            <activation>
-                <property>
-                    <name>sun.boot.class.path</name>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-compiler-plugin</artifactId>
-                        <configuration>
-                            <!--javaee6 contains upgrades of APIs contained within the JDK itself.
-                                As such these need to be placed on the bootclasspath, rather than classpath of the
-                                compiler.
-                                If you don't make use of these new updated API, you can delete the profile.
-                                On non-SUN jdk, you will need to create a similar profile for your jdk, with the similar property as sun.boot.class.path in Sun's JDK.
-                            -->
-                            <compilerArguments>
-                                <bootclasspath>${settings.localRepository}/javax/javaee-endorsed-api/6.0/javaee-endorsed-api-6.0.jar${path.separator}${sun.boot.class.path}</bootclasspath>
-                            </compilerArguments>
-                        </configuration>
-                        <dependencies>
-                            <dependency>
-                                <groupId>javax</groupId>
-                                <artifactId>javaee-endorsed-api</artifactId>
-                                <version>6.0</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
-
-    <repositories>
-        <repository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>central</id>
-            <name>Maven Repository Switchboard</name>
-            <url>http://repo1.maven.org/maven2</url>
-        </repository>
-        <repository>
-            <id>java.net2</id>
-            <name>java.net Repository hosting the jee6 artifacts</name>
-            <url>http://download.java.net/maven/2</url>
-        </repository>
-        <repository>
-            <id>jboss-public-repository-group</id>
-            <name>JBoss Public Repository Group</name>
-            <url>http://repository.jboss.org/nexus/content/groups/public/</url>
-            <layout>default</layout>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </snapshots>
-        </repository>
-        <!-- Deprecated jboss manven repository -->
-        <repository>
-            <id>JBOSS</id>
-            <name>JBoss Repository Deprecated</name>
-            <url>http://repository.jboss.org/maven2/</url>
-        </repository>
-        <repository>
-            <id>google-maven-snapshot-repository</id>
-            <name>Google Maven Snapshot Repository</name>
-            <url>https://m2repos.googlecode.com/svn/nexus</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-    <pluginRepositories>
-        <pluginRepository>
-            <id>jboss-public-repository-group</id>
-            <name>JBoss Public Repository Group</name>
-            <url>http://repository.jboss.org/nexus/content/groups/public/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </pluginRepository>
-    </pluginRepositories>
 
     <dependencies>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-aop</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-asm</artifactId>
             <version>${spring.version}</version>
         </dependency>
         <dependency>
@@ -189,21 +85,6 @@
             <artifactId>spring-core</artifactId>
             <version>${spring.version}</version>
         </dependency>
-        <!--        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-expression</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-instrument</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-instrument-tomcat</artifactId>
-            <version>${spring.version}</version>
-        </dependency>-->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-jdbc</artifactId>
@@ -213,6 +94,17 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-jms</artifactId>
             <version>${spring.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>commons-logging</artifactId>
+                    <groupId>commons-logging</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-spring</artifactId>
+            <version>5.10.2</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
@@ -251,17 +143,17 @@
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-core</artifactId>
-            <version>${spring.version}</version>
+            <version>${spring.security.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-config</artifactId>
-            <version>${spring.version}</version>
+            <version>${spring.security.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-web</artifactId>
-            <version>${spring.version}</version>
+            <version>${spring.security.version}</version>
         </dependency>
         <!-- dependency on spring-batch retry model -->
         <dependency>
@@ -284,9 +176,9 @@
         </dependency>
 
         <dependency>
-            <groupId>com.google.code</groupId>
+            <groupId>com.github.penggle</groupId>
             <artifactId>kaptcha</artifactId>
-            <version>${kaptcha.version}</version>
+            <version>2.3.2</version>
         </dependency>
 
         <dependency>
@@ -309,24 +201,17 @@
         </dependency>
         <dependency>
             <groupId>javax.jms</groupId>
-            <artifactId>jms</artifactId>
-            <version>1.1</version>
-            <scope>provided</scope>
+            <artifactId>javax.jms-api</artifactId>
+            <version>2.0.1</version>
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-core</artifactId>
             <version>${hibernate.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-jmx</artifactId>
-            <!-- seems jboss repo is out of sync -->
-            <version>3.5.6-Final</version>
-        </dependency>
 
         <dependency>
-            <groupId>jdom</groupId>
+            <groupId>org.jdom</groupId>
             <artifactId>jdom</artifactId>
             <version>${jdom.version}</version>
         </dependency>
@@ -352,29 +237,6 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- only need when use enable jboss cache 3 -->
-        <dependency>
-            <groupId>org.jboss.cache</groupId>
-            <artifactId>jbosscache-core</artifactId>
-            <version>${jbosscache-core-version}</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-jbosscache</artifactId>
-            <version>${hibernate.version}</version>
-            <scope>runtime</scope>
-        </dependency>
-
-
-        <!-- open this comment when switching to infinispan -->
-        <!--        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-infinispan</artifactId>
-            <version>${hibernate.version}</version>
-            <scope>runtime</scope>
-        </dependency>-->
-
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
@@ -386,20 +248,6 @@
             <artifactId>c3p0</artifactId>
             <version>${c3p0.version}</version>
             <scope>compile</scope>
-        </dependency>
-
-        <!--        <dependency>
-            <groupId>cglib</groupId>
-            <artifactId>cglib</artifactId>
-            <version>2.2</version>
-            <scope>runtime</scope>
-        </dependency>-->
-
-        <dependency>
-            <groupId>zapcat</groupId>
-            <artifactId>zapcat</artifactId>
-            <version>1.2</version>
-            <scope>runtime</scope>
         </dependency>
         
         <!-- logger -->
@@ -459,7 +307,6 @@
             <groupId>javassist</groupId>
             <artifactId>javassist</artifactId>
             <version>3.9.0.GA</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>ca.juliusdavies</groupId>
@@ -477,6 +324,86 @@
             <artifactId>jersey-json</artifactId>
             <version>1.9.1</version>
         </dependency>
+        <dependency>
+            <groupId>javax.mail</groupId>
+            <artifactId>mail</artifactId>
+            <version>1.5.0-b01</version>
+        </dependency>
     </dependencies>
+    
+    <profiles>
+        <profile>
+            <id>endorsed</id>
+            <activation>
+                <property>
+                    <name>sun.boot.class.path</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <!--javaee6 contains upgrades of APIs contained within the JDK itself.
+                                As such these need to be placed on the bootclasspath, rather than classpath of the
+                                compiler.
+                                If you don't make use of these new updated API, you can delete the profile.
+                                On non-SUN jdk, you will need to create a similar profile for your jdk, with the similar property as sun.boot.class.path in Sun's JDK.
+                            -->
+                            <compilerArguments>
+                                <bootclasspath>${settings.localRepository}/javax/javaee-endorsed-api/6.0/javaee-endorsed-api-6.0.jar${path.separator}${sun.boot.class.path}</bootclasspath>
+                            </compilerArguments>
+                        </configuration>
+                        <dependencies>
+                            <dependency>
+                                <groupId>javax</groupId>
+                                <artifactId>javaee-endorsed-api</artifactId>
+                                <version>6.0</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <repositories>
+        <repository>
+            <id>spring-snapshots</id>
+            <name>Spring Snapshots</name>
+            <url>https://repo.spring.io/snapshot</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>spring-milestones</id>
+            <name>Spring Milestones</name>
+            <url>https://repo.spring.io/milestone</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>spring-snapshots</id>
+            <name>Spring Snapshots</name>
+            <url>https://repo.spring.io/snapshot</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </pluginRepository>
+        <pluginRepository>
+            <id>spring-milestones</id>
+            <name>Spring Milestones</name>
+            <url>https://repo.spring.io/milestone</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
 </project>
 
