@@ -10,7 +10,7 @@
     <url>http://maven.apache.org</url>
     <properties>
         <spring.version>3.2.10.RELEASE</spring.version>
-        <spring.security.version>3.2.10.RELEASE</spring.security.version>
+        <spring.security.version>5.3.3.RELEASE</spring.security.version>
         <activemq.version>5.14.1</activemq.version>
         <spring.xml.version>1.5.9</spring.xml.version>
         <spring.batch.version>2.1.2.RELEASE</spring.batch.version>
