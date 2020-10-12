@@ -25,7 +25,7 @@
         <kaptcha.version>2.3.2</kaptcha.version>
         <jdom.version>1.1</jdom.version>
         <httpclient.version>3.1</httpclient.version>
-        <junit.version>4.8.1</junit.version>
+        <junit.version>4.13.1</junit.version>
         <project.build.sourceEncoding>UTF8</project.build.sourceEncoding>
     </properties>
 
